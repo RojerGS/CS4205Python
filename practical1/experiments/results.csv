@@ -1,0 +1,3 @@
+crossover_type, population_size, m, k, d, generations, evaluations, time, best_fitness, optimal
+Uniform, 100, 8, 5, 1, 523, 52400, 1.0009992122650146, 29.0, False
+OnePoint, 100, 8, 5, 1, 438, 43900, 1.0025653839111328, 28.0, False
