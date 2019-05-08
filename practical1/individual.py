@@ -11,7 +11,6 @@ class Individual(object):
         If we don't give it a genotype length, the individual will be empty and need copying
         """
         if genotype_length != None:
-            print("hoesgf")
             self.genotype = []
             for i in range(genotype_length):
                 self.genotype.append(np.random.randint(2))
