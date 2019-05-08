@@ -6,14 +6,15 @@ class Individual(object):
     fitness = 0.0
 
 
-    def __init__(self, genotype_length):
+    def __init__(self, genotype_length = None):
         """ individual constructor
         If we don't give it a genotype length, the individual will be empty and need copying
         """
-        if genotype_length is not None:
-            genotype = []
+        if genotype_length != None:
+            print("hoesgf")
+            self.genotype = []
             for i in range(genotype_length):
-                genotype.append(np.random.randint(2))
+                self.genotype.append(np.random.randint(2))
 
 
     def clone(self):

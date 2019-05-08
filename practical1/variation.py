@@ -1,6 +1,6 @@
-from enum import Enum, auto
+from enum import IntEnum, auto
 
-class CrossoverType(Enum):
+class CrossoverType(IntEnum):
     Uniform = auto()
     OnePoint = auto()
 
@@ -13,16 +13,16 @@ class Variation:
         self.crossover_type = crossover_type
 
 
-    def perform_crossover(parent1, parent2):
+    def perform_crossover(self, parent1, parent2):
         """ Wrapper function to use the appropriate variation mechanism
         """
         if (self.crossover_type == CrossoverType.OnePoint):
-            return onePointCrossover(parent1,parent2)
+            return self.onePointCrossover(parent1,parent2)
         else:
-            return uniformCrossover(parent1, parent2)
+            return self.uniformCrossover(parent1, parent2)
 
 
-    def onePointCrossover(parent1, parent2):
+    def onePointCrossover(self, parent1, parent2):
         """ Perform one point crossover of individuals, return children
         """
         child1 = parent1.clone()
@@ -36,7 +36,7 @@ class Variation:
 
         return result
 
-    def uniformCrossover(parent1, parent2):
+    def uniformCrossover(self, parent1, parent2):
         """ Perform uniform crossover of individuals, return children
         """
         child1 = parent1.clone()

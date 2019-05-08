@@ -18,7 +18,7 @@ class FitnessFunction:
             super().__init__(message)
             self.errors = errors
 
-    def evaluate(individual):
+    def evaluate(self, individual):
         """ function to evaluate the fitness of the Individual
         """
         #TODO : You have to implement the correct evaluation function. The following is OneMax (counts 1s). Remember to modify the optimum as well
@@ -29,7 +29,7 @@ class FitnessFunction:
             result += individual.genotype[i]
 
         individual.fitness = result
-        if(self.elite == None or self.elite.fitness < individual.fitness):
+        if (self.elite == None or self.elite.fitness < individual.fitness):
             self.elite = individual.clone()
-        if (result == optimum):
+        if (result == self.optimum):
             raise OptimumFoundCustomException("GG EZ")

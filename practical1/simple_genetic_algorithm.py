@@ -5,6 +5,7 @@ from random import shuffle
 from variation import Variation
 from selection import Selection
 from fitness_function import FitnessFunction
+from individual import Individual
 
 # set up the logger, log file and stream handler
 logger = logging.getLogger('simple_genetic_algorithm')
@@ -36,7 +37,7 @@ class SimpleGeneticAlgorithm:
         self.population = []
 
 
-    def check_Termination_Condition(generation_limit, evaluations_limit, time_limit):
+    def checkTerminationCondition(self, generation_limit, evaluations_limit, time_limit):
         """ function to decide when to stop running the SGA
         """
         if(generation_limit >0 and self.generation >= generation_limit):
@@ -45,14 +46,14 @@ class SimpleGeneticAlgorithm:
         elif(evaluations_limit > 0 and self.fitness_function.evaluations >= evaluations_limit):
             return True
 
-        elapsed_time = time.time() - start_time
+        elapsed_time = time.time() - self.start_time
         if(time_limit > 0 and elapsed_time >= time_limit):
             return True
 
         return False
 
 
-    def run(generation_limit, evaluations_limit, time_limit):
+    def run(self, generation_limit, evaluations_limit, time_limit):
         """ perform the SGA
         """
 
@@ -70,7 +71,7 @@ class SimpleGeneticAlgorithm:
         #             + str(time.time() - self.start_time) + " " + str(fitness_function.elite.fitness))
 
         # evolutionary loop
-        while (not check_Termination_Condition(generation_limit, evaluations_limit, time_limit)):
+        while (not self.checkTerminationCondition(generation_limit, evaluations_limit, time_limit)):
             # log info
 
             # create permutation of indices
@@ -79,7 +80,7 @@ class SimpleGeneticAlgorithm:
             shuffle(perm)
 
             # generate offspring
-            for i in range(population_size // 2):
+            for i in range(self.population_size // 2):
                 offspring += self.variation.perform_crossover(self.population[perm[2 * i]], self.population[perm[2 * i + 1]])
 
             # evaluate offspring
@@ -89,10 +90,10 @@ class SimpleGeneticAlgorithm:
             # join parents and offspring
             p_and_o = []
             p_and_o += self.population
-            p_and_o += self.offspring
+            p_and_o += offspring
 
             # select out offspring
-            self.population = self.selection.tournamentselect(p_and_o)
-            generation += 1
+            self.population = self.selection.tournamentSelect(p_and_o)
+            self.generation += 1
 
             #log info
