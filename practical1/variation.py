@@ -28,10 +28,10 @@ class Variation:
         """
         child1 = parent1.clone()
         child2 = parent2.clone()
-        rn = randit(1,parent1.genotype_length)
-        child1.genotype[0:rn] = parent2[0:rn]
-        child2.genotype[rn:(parent1.genotype_length)] = parent1[rn:(parent1.genotype_length)]
-       
+        rn = random.randint(1, len(parent1.genotype))
+        child1.genotype[0:rn] = parent2.genotype[0:rn]
+        child2.genotype[rn:(len(parent1.genotype))] = parent1.genotype[rn:(len(parent1.genotype))]
+
         # TODO: remember to use the rand ng to sample random numbers
 
         result = []
@@ -45,8 +45,8 @@ class Variation:
         """
         child1 = parent1.clone()
         child2 = parent2.clone()
-        
-        for i in range(parent1.genotype_length):
+
+        for i in range(len(parent1.genotype)):
             randn = random.uniform(0,1)
             temp=0
             if(randn >= 0.5):
@@ -55,7 +55,7 @@ class Variation:
                 child2.genotype[i]= temp
             else:
                 continue
-               
+
 
         # TODO: remember to use the rand ng to sample random numbers
 

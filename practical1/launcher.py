@@ -4,25 +4,25 @@ from simple_genetic_algorithm import SimpleGeneticAlgorithm
 from fitness_function import FitnessFunction, OptimumFoundCustomException
 from itertools import product as cp
 
+population_sizes = range(20, 200+1, 20)
+ms = [1, 2, 4, 8, 16]
+ks = [5]
+crossoverTypes = list(CrossoverType)
+
 def main():
     generations_limit = -1
     evaluations_limit = -1
-    time_limit = 1.0 # in seconds
+    time_limit = 3.0 # in seconds
 
     if 'experiments' not in os.listdir('.'):
         os.mkdir('experiments')
 
-    population_sizes = [100]
-    ms = [1, 2, 4, 8, 16]
-    ks = [2, 5, 10]
-    crossoverTypes = list(CrossoverType)
-
     # set up file outputs
     f = open("experiments/results.csv", "w+")
-    f.write("crossover_type, population_size, m, k, d, generations, evaluations, time, best_fitness, optimal\n")
+    f.write("crossover_type,population_size,m,k,d,optimal,generations,evaluations,time,best_fitness,isOptimal\n")
 
     i = -1
-    for (ct, p, m, k) in cp(crossoverTypes, population_sizes, ms, ks):
+    for (ct, m, k, p, _) in cp(crossoverTypes, ms, ks, population_sizes, range(5)):
         # find the values for d to test
         for d in [1/k, 1-1/k]:
             # run genetic algorithm
@@ -35,7 +35,6 @@ def main():
             try:
                 sga.run(generations_limit, evaluations_limit, time_limit)
             except OptimumFoundCustomException:
-                print("ewiojaoiwdj")
                 optimumFound = True
 
             print("""{outcome} {bf} found at
@@ -51,13 +50,12 @@ def main():
                        elite = sga.fitness_function.elite
             ))
 
-            f.write("{ct}, {p}, {m}, {k}, {d}, {gen}, {evals}, {time}, {bf}, {found}\n".format(
-                ct = ct.name, p=p, m=m, k=k, d=d,
+            f.write("{ct},{p},{m},{k},{d},{optimal},{gen},{evals},{time},{bf},{found}\n".format(
+                ct = ct.name, p=p, m=m, k=k, d=d, optimal=sga.fitness_function.optimum,
                 gen = sga.generation, evals = sga.fitness_function.evaluations,
                 time = time.time() - sga.start_time, bf = sga.fitness_function.elite.fitness,
                 found = optimumFound
             ))
-            if optimumFound == True: f.write("Optimum found!\n")
 
 
 if __name__ == "__main__":
