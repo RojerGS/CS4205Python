@@ -22,7 +22,7 @@ def main():
     f.write("crossover_type,population_size,m,k,d,optimal,generations,evaluations,time,best_fitness,isOptimal\n")
 
     i = -1
-    for (ct, m, k, p, _) in cp(crossoverTypes, ms, ks, population_sizes, range(5)):
+    for (ct, m, k, p, _) in cp(crossoverTypes, ms, ks, population_sizes, range(10)):
         # find the values for d to test
         for d in [1/k, 1-1/k]:
             # run genetic algorithm

@@ -45,7 +45,9 @@ ds = [1/k, 1-1/k]
 
 
 
-""" OPTIMALITY """
+
+
+# OPTIMALITY
 # %%
 # plot percentage of optimality by m value
 fn = "experiments/results/optimalityByM.png"
@@ -69,6 +71,7 @@ for i in range(len(ms)):
         axes[i].plot(list(map(lambda x: x[0], averages)), list(map(lambda x: x[1], averages)), color = lineColors[co.name])
 
 f.savefig(fn)
+
 
 # %%
 # plot percentage of optimality by d value
@@ -95,10 +98,43 @@ for co in crossoverTypes:
 f.savefig(fn)
 
 
+# %%
+# plot percentage of optimality by m value and d value
+fn = "experiments/results/optimality.png"
+f, axes = plt.subplots(len(ms), len(ds), sharex=True, sharey=True)
+f.suptitle('Elite Fitness Optimality by m, k')
+
+for i in range(len(ms)):
+    m = ms[i]
+
+    for j in range(len(ds)):
+        d = ds[j]
+
+        for co in crossoverTypes:
+            # collect data
+            sub = results[(results.crossover_type == co.name) & (results.m == m) & (results.d == d)]
+            averages = []
+            for pop in sorted(set(sub.population_size)):
+                averages.append((pop, np.mean(sub[sub.population_size == pop].optimal_fraction)))
+
+            # plot scatter and line
+            if i == len(ms)-1:
+                axes[i][j].set_xlabel('d={0}\npopulation size'.format(d))
+            if j == 0:
+                axes[i][j].set_ylabel('m={0}'.format(m))
+
+            axes[i][j].tick_params(labelsize=8)
+            axes[i][j].set_xticks(list(range(0, 200+1, 20)))
+            axes[i][j].scatter(sub.population_size, sub.optimal_fraction, color = pointColors[co.name])
+            axes[i][j].plot(list(map(lambda x: x[0], averages)), list(map(lambda x: x[1], averages)), color = lineColors[co.name])
+
+f.savefig(fn)
 
 
 
-""" EVALUATIONS """
+
+
+# EVALUATIONS
 # %%
 # plot percentage of optimality by m value
 fn = "experiments/results/evaluationsByM.png"
@@ -122,6 +158,7 @@ for i in range(len(ms)):
         axes[i].plot(list(map(lambda x: x[0], averages)), list(map(lambda x: x[1], averages)), color = lineColors[co.name])
 
 f.savefig(fn)
+
 
 # %%
 # number of evaluations needed to reach optimality by d value
@@ -147,11 +184,43 @@ for co in crossoverTypes:
 
 f.savefig(fn)
 
+# %%
+# plot percentage of optimality by m value and d value
+fn = "experiments/results/evaluations.png"
+f, axes = plt.subplots(len(ms), len(ds), sharex=True, sharey=True)
+f.suptitle('Number of Evaluations by m, d')
+
+for i in range(len(ms)):
+    m = ms[i]
+
+    for j in range(len(ds)):
+        d = ds[j]
+
+        for co in crossoverTypes:
+            # collect data
+            sub = results[(results.crossover_type == co.name) & (results.m == m) & (results.d == d)]
+            averages = []
+            for pop in sorted(set(sub.population_size)):
+                averages.append((pop, np.mean(sub[sub.population_size == pop].evaluations)))
+
+            # plot scatter and line
+            if i == len(ms)-1:
+                axes[i][j].set_xlabel('d={0}\npopulation size'.format(d))
+            if j == 0:
+                axes[i][j].set_ylabel('m={0}'.format(m))
+
+            axes[i][j].tick_params(labelsize=8)
+            axes[i][j].set_xticks(list(range(0, 200+1, 20)))
+            axes[i][j].scatter(sub.population_size, sub.evaluations, color = pointColors[co.name])
+            axes[i][j].plot(list(map(lambda x: x[0], averages)), list(map(lambda x: x[1], averages)), color = lineColors[co.name])
+
+f.savefig(fn)
 
 
 
 
-""" GENERATIONS """
+
+# GENERATIONS
 # %%
 # plot percentage of optimality by m value
 fn = "experiments/results/generationsByM.png"
@@ -176,6 +245,7 @@ for i in range(len(ms)):
 
 f.savefig(fn)
 
+
 # %%
 # number of evaluations needed to reach optimality by d value
 fn = "experiments/results/generationsByD.png"
@@ -197,5 +267,38 @@ for co in crossoverTypes:
         axes[i].set_ylabel('d = '+str(d))
         axes[i].scatter(sub.population_size, sub.generations, color = pointColors[co.name])
         axes[i].plot(list(map(lambda x: x[0], averages)), list(map(lambda x: x[1], averages)), color = lineColors[co.name])
+
+f.savefig(fn)
+
+
+# %%
+# plot percentage of optimality by m value and d value
+fn = "experiments/results/generations.png"
+f, axes = plt.subplots(len(ms), len(ds), sharex=True, sharey=True)
+f.suptitle('Number of Generations by m, d')
+
+for i in range(len(ms)):
+    m = ms[i]
+
+    for j in range(len(ds)):
+        d = ds[j]
+
+        for co in crossoverTypes:
+            # collect data
+            sub = results[(results.crossover_type == co.name) & (results.m == m) & (results.d == d)]
+            averages = []
+            for pop in sorted(set(sub.population_size)):
+                averages.append((pop, np.mean(sub[sub.population_size == pop].generations)))
+
+            # plot scatter and line
+            if i == len(ms)-1:
+                axes[i][j].set_xlabel('d={0}\npopulation size'.format(d))
+            if j == 0:
+                axes[i][j].set_ylabel('m={0}'.format(m))
+
+            axes[i][j].tick_params(labelsize=8)
+            axes[i][j].set_xticks(list(range(0, 200+1, 20)))
+            axes[i][j].scatter(sub.population_size, sub.generations, color = pointColors[co.name])
+            axes[i][j].plot(list(map(lambda x: x[0], averages)), list(map(lambda x: x[1], averages)), color = lineColors[co.name])
 
 f.savefig(fn)
