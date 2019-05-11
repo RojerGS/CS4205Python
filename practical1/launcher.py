@@ -7,12 +7,14 @@ from itertools import product as cp
 population_sizes = range(20, 200+1, 20)
 ms = [1, 2, 4, 8, 16]
 ks = [5]
+
+time_limits = dict(zip(ms, [3, 5, 10, 15, 20]))
+generations_limit = -1
+evaluations_limit = -1
+
 crossoverTypes = list(CrossoverType)
 
 def main():
-    generations_limit = -1
-    evaluations_limit = -1
-    time_limit = 3.0 # in seconds
 
     if 'experiments' not in os.listdir('.'):
         os.mkdir('experiments')
@@ -23,6 +25,8 @@ def main():
 
     i = -1
     for (ct, m, k, p, _) in cp(crossoverTypes, ms, ks, population_sizes, range(10)):
+        time_limit = time_limits[m]
+
         # find the values for d to test
         for d in [1/k, 1-1/k]:
             # run genetic algorithm

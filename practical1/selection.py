@@ -9,12 +9,9 @@ class Selection:
     def getBest(self, candidates):
         """ return the individual in a list with the highest fitness
         """
-        best = candidates[0]
+        fitnesses = np.array(list(map(lambda x: x.fitness, candidates)))
+        return candidates[fitnesses.argmax()]
 
-        for i in range(len(candidates)):
-            if (candidates[i].fitness >= best.fitness):
-                best = candidates[i]
-        return best
 
     def tournamentSelect(self, individuals):
         """ use tournament selection on a list of individuals, return the selection

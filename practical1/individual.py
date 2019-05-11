@@ -11,19 +11,14 @@ class Individual(object):
         If we don't give it a genotype length, the individual will be empty and need copying
         """
         if genotype_length != None:
-            self.genotype = []
-            for i in range(genotype_length):
-                self.genotype.append(np.random.randint(2))
+            self.genotype = np.random.randint(2, size = genotype_length) # generate numpy array of 1s and 0s
 
 
     def clone(self):
         """ Create a new individual that is a deep copy of this individual
         """
         retClone = Individual()
-        retClone.genotype = []
-
-        for i in range(len(self.genotype)):
-            retClone.genotype.append(self.genotype[i]) #maybe change to deep copy later
+        retClone.genotype = self.genotype
 
         retClone.fitness = self.fitness
         return retClone

@@ -1,4 +1,5 @@
 import time, logging, sys
+import numpy as np
 from random import shuffle
 
 from variation import Variation
@@ -39,6 +40,9 @@ class SimpleGeneticAlgorithm:
     def checkTerminationCondition(self, generation_limit, evaluations_limit, time_limit):
         """ function to decide when to stop running the SGA
         """
+        fitnesses = np.array(list(map(lambda x: x.fitness, self.population)))
+        if len(np.unique(fitnesses)) == 1: return True
+
         if(generation_limit >0 and self.generation >= generation_limit):
             return True
 
@@ -66,8 +70,6 @@ class SimpleGeneticAlgorithm:
             self.fitness_function.evaluate(individual)
             self.population.append(individual)
 
-        # logger.info(str(self.generation) + " " + str(fitness_function.evaluations) + " "
-        #             + str(time.time() - self.start_time) + " " + str(fitness_function.elite.fitness))
 
         # evolutionary loop
         while (not self.checkTerminationCondition(generation_limit, evaluations_limit, time_limit)):
