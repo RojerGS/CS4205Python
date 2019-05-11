@@ -1,6 +1,7 @@
 import time, logging, sys
 import numpy as np
 from random import shuffle
+from math import sqrt, ceil
 
 from variation import Variation
 from selection import Selection
@@ -35,13 +36,22 @@ class SimpleGeneticAlgorithm:
         self.variation = Variation(crossover_type)
         self.selection = Selection()
         self.population = []
+        self.peak_fitnesses = []
 
 
     def checkTerminationCondition(self, generation_limit, evaluations_limit, time_limit):
         """ function to decide when to stop running the SGA
         """
+        # terminate if most fitnesses are equal
         fitnesses = np.array(list(map(lambda x: x.fitness, self.population)))
         if len(np.unique(fitnesses)) == 1: return True
+        # if len(list(filter(lambda x: x.fitness == max(fitnesses), self.population))) > .9*len(self.population): return True
+
+        # terminate if the population contains very few unique genotypes
+        # strings = list(map(lambda x: x.__repr__(), self.population))
+        # if len(set(strings)) < len(self.population) / (self.genotype_length): return True
+
+        # terminate if the fitness of the elite has stopped increasing
 
         if(generation_limit >0 and self.generation >= generation_limit):
             return True
@@ -97,4 +107,5 @@ class SimpleGeneticAlgorithm:
             self.population = self.selection.tournamentSelect(p_and_o)
             self.generation += 1
 
-            #log info
+            # update list of peak fitnesses
+            self.peak_fitnesses.append(self.fitness_function.elite.fitness)

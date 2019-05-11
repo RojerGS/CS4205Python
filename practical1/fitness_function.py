@@ -48,5 +48,6 @@ class FitnessFunction:
 
         if (self.elite == None or self.elite.fitness < individual.fitness):
             self.elite = individual.clone()
+
         if (result == self.optimum):
             raise OptimumFoundCustomException("GG EZ")

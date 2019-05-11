@@ -4,7 +4,7 @@ from simple_genetic_algorithm import SimpleGeneticAlgorithm
 from fitness_function import FitnessFunction, OptimumFoundCustomException
 from itertools import product as cp
 
-population_sizes = range(20, 200+1, 20)
+population_sizes = range(20, 100+1, 20)
 ms = [1, 2, 4, 8, 16]
 ks = [5]
 
@@ -21,7 +21,7 @@ def main():
 
     # set up file outputs
     f = open("experiments/results.csv", "w+")
-    f.write("crossover_type,population_size,m,k,d,optimal,generations,evaluations,time,best_fitness,isOptimal\n")
+    f.write("crossover_type,population_size,m,k,d,optimum,generations,evaluations,time,best_fitness,is_optimal\n")
 
     i = -1
     for (ct, m, k, p, _) in cp(crossoverTypes, ms, ks, population_sizes, range(10)):
@@ -54,8 +54,8 @@ def main():
                        elite = sga.fitness_function.elite
             ))
 
-            f.write("{ct},{p},{m},{k},{d},{optimal},{gen},{evals},{time},{bf},{found}\n".format(
-                ct = ct.name, p=p, m=m, k=k, d=d, optimal=sga.fitness_function.optimum,
+            f.write("{ct},{p},{m},{k},{d},{optimum},{gen},{evals},{time},{bf},{found}\n".format(
+                ct = ct.name, p=p, m=m, k=k, d=d, optimum=sga.fitness_function.optimum,
                 gen = sga.generation, evals = sga.fitness_function.evaluations,
                 time = time.time() - sga.start_time, bf = sga.fitness_function.elite.fitness,
                 found = optimumFound
