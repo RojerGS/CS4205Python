@@ -1,5 +1,6 @@
 practical1_java
 *.log
 *.csv
+*.pdf
 practical1/experiments
 *__pycache__

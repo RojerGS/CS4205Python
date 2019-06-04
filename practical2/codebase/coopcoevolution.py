@@ -2,7 +2,7 @@
 based on the implementations of the real-valued optimizations algorithms provided.
 In black-box cooperative coevolution, we want to minimize a function f,
 where f is a function of n variables, but we know that it makes sense to divide
-the problem into several populations, each concerned with 
+the problem into several populations, each concerned with
 ????????????????????"""
 
 from de import DE

@@ -6,13 +6,14 @@ In particular, the details in pages 37-50"""
 import numpy as np
 import random as rnd
 from math import floor
+from genetic_algorithm import GeneticAlgorithm
 
-class DE(object):
+class DifferentialEvolution(GeneticAlgorithm):
     """This genetic algorithm encapsulates a population that evolves
     according to the Differential Evolution algorithm."""
     def __init__(self, fitness_function, genome_length, population_size, *,
-                    lower_bounds=None, upper_bounds=None,
-                    crossover_probability=0.5, Fweight=0.1):
+                 lower_bounds=0, upper_bounds=1,
+                 crossover_probability=0.5, f_weight=0.1):
         """Initialize a population that will evolve according to the DE.
             The genome_length is the number of parameters of each individual,
                 the population_size and fitness_function are self_explanatory;
@@ -23,28 +24,23 @@ class DE(object):
                 defaults to 0 and the upper bound defaults to 1;
                 Alternatively, a constant can be passed in, which will then be
                 taken as the corresponding bound for all the features."""
-        self._genome_length = genome_length
-        self._population_size = population_size
-        self._fitness_function = fitness_function
+        super(DifferentialEvolution, self).__init__(
+              fitness_function=fitness_function,
+              genome_length=genome_length,
+              population_size=population_size)
 
-        # check if we got any lower bounds
-        if lower_bounds is None:
-            lower_bounds = np.zeros(genome_length, dtype=np.double)
-        # this might happen if the lower bound is given as just a constant
-        elif not hasattr(lower_bounds, "__iter__"):
+        # if the given bounds are constants, turn them into vectors
+        if not hasattr(lower_bounds, "__iter__"):
             lower_bounds = lower_bounds*np.ones(genome_length, dtype=np.double)
-        self._lower_bounds = lower_bounds
-        if upper_bounds is None:
-            upper_bounds = np.ones(genome_length, dtype=np.double)
-        elif not hasattr(upper_bounds, "__iter__"):
+        if not hasattr(upper_bounds, "__iter__"):
             upper_bounds = upper_bounds*np.ones(genome_length, dtype=np.double)
+        self._lower_bounds = lower_bounds
         self._upper_bounds = upper_bounds
+
         self._crossover_prob = crossover_probability
-        # number of times the fitness function was evaluated
-        self._evaluations = 0
-        # number of generations ran
-        self._generations = 0
-        self._fweight = Fweight
+        self._evaluations = 0   # number of times the fitness function was evaluated
+        self._generations = 0   # number of generations ran
+        self._f_weight = f_weight
         self.init_population()
 
     def init_population(self):
@@ -76,7 +72,7 @@ class DE(object):
             # take r0, r1 and r2
             r0, r1, r2 = rnd.sample(Ns[:i]+Ns[i+1:], 3)
             # create a mutation
-            mutant = self._population[r0, :] + self._fweight*(self._population[r1, :] - self._population[r2, :])
+            mutant = self._population[r0, :] + self._f_weight*(self._population[r1, :] - self._population[r2, :])
             # crop to fit inside the bounds
             leftMask = mutant < self._lower_bounds
             mutant[leftMask] = self._lower_bounds[leftMask]
@@ -98,22 +94,22 @@ class DE(object):
     def has_converged(self):
         return np.all(self._population[0] == self._population[1:])
 
-    def generations(self):
-        """Returns the number of generations this algorithm has run for"""
-        return self._generations
-
-    def evaluations(self):
-        """Returns how many times the fitness function has been evaluated"""
-        return self._evaluations
-
-    def get_best(self, n):
-        indices = np.argsort(self._fitnesses)
-        return np.copy(self._population[indices[:n], :])
-
-    def get_best_fitness(self, n):
-        """Returns the best n values of the fitness"""
-        sorted_fits = np.sort(self._fitnesses)
-        return sorted_fits[:n]
+    # def generations(self):
+    #     """Returns the number of generations this algorithm has run for"""
+    #     return self._generations
+    #
+    # def evaluations(self):
+    #     """Returns how many times the fitness function has been evaluated"""
+    #     return self._evaluations
+    #
+    # def get_best(self, n):
+    #     indices = np.argsort(self._fitnesses)
+    #     return np.copy(self._population[indices[:n], :])
+    #
+    # def get_best_fitness(self, n):
+    #     """Returns the best n values of the fitness"""
+    #     sorted_fits = np.sort(self._fitnesses)
+    #     return sorted_fits[:n]
 
 if __name__ == "__main__":
     # Solve the "sphere" problem
@@ -127,7 +123,7 @@ if __name__ == "__main__":
     print("################")
     print("#### START #####")
     print("################")
-    de = DE(f, 10, 100, lower_bounds=-3, upper_bounds=3)
+    de = DifferentialEvolution(f, 10, 100, lower_bounds=-3, upper_bounds=3)
     for i in range(100):
         de.evolve()
         print(de.get_best_fitness(1))
