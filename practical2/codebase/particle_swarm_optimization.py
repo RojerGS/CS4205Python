@@ -71,6 +71,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 upper_bounds = upper_bounds*np.ones(genome_length, dtype=np.double)
             self._lower_bounds = lb = lower_bounds
             self._upper_bounds = ub = upper_bounds
+            self._speed_cap = (ub-lb)/2 - lb
 
             self._best_position = self._curr_position = np.random.rand(self._genome_length)*(ub-lb)+lb
             self._velocity = np.random.rand(genome_length)
@@ -102,10 +103,10 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             #cap the velocity as necessary
             if self._velocity_cap_type == PSOVelocityCap.MAXCAP:
                 for i in range(self._genome_length):
-                    if self._velocity[i] < self._lower_bounds[i]:
-                        self._velocity[i] = self._lower_bounds[i]
-                    elif self._velocity[i] > self._upper_bounds[i]:
-                        self._velocity[i] = self._upper_bounds[i]
+                    if self._velocity[i] < -self._speed_cap[i]:
+                        self._velocity[i] = -self._speed_cap[i]
+                    elif self._velocity[i] > self._speed_cap[i]:
+                        self._velocity[i] = self._speed_cap[i]
 
         def update_velocity_normal(self, neighbors):
             """
@@ -144,6 +145,10 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                             for neighbor in neighbors])
 
         def move(self):
+            """
+            Update the position of the particle with respect to the velocity,
+            capping the position of the particle as needed.
+            """
             self._curr_position += self._velocity
             for i in range(self._genome_length):
                 if self._curr_position[i] < self._lower_bounds[i]:
