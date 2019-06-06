@@ -4,16 +4,29 @@ import numpy as np
 from enum import Enum
 
 class PSOTopologies(Enum):
-    GBEST = 1
-    LBEST = 2
-    VONNEUMANN = 3
-
+    """
+    Enumerated type which represents the topology strategy.
+    Topology describes the way that particles observe the performance
+    of their "neighbors" to influence their trajectories.
+    """
+    GBEST = 1       # fully connected graph
+    LBEST = 2       # one big cycle
+    VONNEUMANN = 3  # single component with vertices of degree 4
 
 class PSOInteractions(Enum):
-    NORMAL = 1
-    FIPS = 2       # I don't feel like implementing this one
+    """
+    Enumerated type which represents interaction type.
+    Interaction types are the ways that particles calculate their
+    new trajectories from their neighbors.
+    """
+    NORMAL = 1  # read the best position of the most fit neighbor
+    FIPS = 2    # move your trajectory towards the best positions
+                # of all of your neightbors
 
 class PSOVelocityCap(Enum):
+    """
+    Enumerated type which represents the option to cap velocity of a particle.
+    """
     UNCAPPED = 1
     MAXCAP = 2
 
@@ -29,7 +42,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         """
         def __init__(self, genome_length, fitness_function,
                      interaction = PSOInteractions.NORMAL,
-                     velocity_cap = PSOVelocityCap.UNCAPPED,
+                     velocity_cap_type = PSOVelocityCap.UNCAPPED,
                      lower_bounds=-3.0, upper_bounds=3.0,
                      phi_i = 2.0, phi_g = 2.0):
             """
@@ -47,7 +60,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             self._interaction = interaction
             self._genome_length = genome_length
 
-            self._velocity_cap = velocity_cap
+            self._velocity_cap_type = velocity_cap_type
             self._phi_i = phi_i
             self._phi_g = phi_g
 
@@ -87,7 +100,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 self.update_velocity_FIPS(neighbors)
 
             #cap the velocity as necessary
-            if self._velocity_cap == PSOVelocityCap.MAXCAP:
+            if self._velocity_cap_type == PSOVelocityCap.MAXCAP:
                 for i in range(self._genome_length):
                     if self._velocity[i] < self._lower_bounds[i]:
                         self._velocity[i] = self._lower_bounds[i]
@@ -255,11 +268,12 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
         self._generations += 1
 
-    def get_best(self, n):
+    def get_best(self, n=1):
         """
         Return the genotype of the best individual in the population
         """
-        return self._elite._best_position
+        best_individuals = sorted(self._population, key=lambda x: x._best_fitness)
+        return [bi._best_position for bi in best_individuals][:n]
 
     def get_best_fitness(self, n=1):
         """
