@@ -27,8 +27,9 @@ class PSOVelocityCap(Enum):
     """
     Enumerated type which represents the option to cap velocity of a particle.
     """
-    UNCAPPED = 1
-    MAXCAP = 2
+    UNCAPPED = 1    # velocity can increase forever
+    MAXCAP = 2      # the magnitude of the velocity on a dimension, at its cap,
+                    # is half of the size of the dimension's domain
 
 class ParticleSwarmOptimization(GeneticAlgorithm):
     """
@@ -132,7 +133,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         def update_velocity_FIPS(self, neighbors):
             """
             Update the velocity of the particle with the "Fully Informed
-            Particle Swarm" method
+            Particle Swarm" method.
 
             Args:
                 neighbors (list-like): a list of neighbors which will influence
@@ -166,7 +167,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                  max_evaluations = float('inf'),
                  goal_fitness = float('-inf')):
         """
-        Initialize the PSO with parameters
+        Initialize the PSO with parameters.
 
         Args:
             fitness_function (function): The function to minimize.
@@ -207,6 +208,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                             for _ in range(self._population_size)]
         self.init_topology()
 
+        # get initial fitnesses for the first evaluation step
         for individual in self._population:
             individual.evaluate()
 
@@ -255,7 +257,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
     def evolve(self):
         """
-        recalculate velocities, and move, and evaluate fitness.
+        recalculate velocities, move, and evaluate fitness.
         """
         if self._topology == PSOTopologies.GBEST:
             self._neighborhoods = [self._elite for _ in range(self._population_size)]
@@ -275,14 +277,14 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
     def get_best(self, n=1):
         """
-        Return the genotype of the best individual in the population
+        Return the genotype of the best individual in the population.
         """
         best_individuals = sorted(self._population, key=lambda x: x._best_fitness)
         return [bi._best_position for bi in best_individuals][:n]
 
     def get_best_fitness(self, n=1):
         """
-        Return the best n values of the fitness
+        Return the best n values of the fitness.
         """
         fitnesses = [i._best_fitness for i in self._population]
         return np.sort(fitnesses)[:n]
