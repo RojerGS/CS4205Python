@@ -57,11 +57,6 @@ class DifferentialEvolution(GeneticAlgorithm):
             self._fitnesses[i] = self._fitness_function(self._population[i, :])
         self._evaluations += self._population_size
 
-        # # sort the individuals
-        # indices = np.argsort(self._fitnesses)
-        # self._population[::, ::] = self._population[indices, ::]
-        # self._fitnesses = self._fitnesses[indices]
-
     def evolve(self):
         """Create next generation"""
         self._generations += 1
@@ -94,29 +89,11 @@ class DifferentialEvolution(GeneticAlgorithm):
     def has_converged(self):
         return np.all(self._population[0] == self._population[1:])
 
-    # def generations(self):
-    #     """Returns the number of generations this algorithm has run for"""
-    #     return self._generations
-    #
-    # def evaluations(self):
-    #     """Returns how many times the fitness function has been evaluated"""
-    #     return self._evaluations
-    #
-    # def get_best(self, n):
-    #     indices = np.argsort(self._fitnesses)
-    #     return np.copy(self._population[indices[:n], :])
-    #
-    # def get_best_fitness(self, n):
-    #     """Returns the best n values of the fitness"""
-    #     sorted_fits = np.sort(self._fitnesses)
-    #     return sorted_fits[:n]
 
 if __name__ == "__main__":
     # Solve the "sphere" problem
-    def f(l):
-        array = np.array(l)
-        return np.linalg.norm(array)
-
+    from fitness_functions import FunctionFactory as FF
+    f = FF.get_sphere()
     rnd.seed(0)
     np.random.seed(0)
 
