@@ -2,6 +2,7 @@
 from genetic_algorithm import GeneticAlgorithm
 import numpy as np
 from enum import Enum
+from copy import deepcopy as dc
 
 class PSOTopologies(Enum):
     """
@@ -43,7 +44,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         """
         def __init__(self, genome_length, fitness_function,
                      interaction = PSOInteractions.NORMAL,
-                     velocity_cap_type = PSOVelocityCap.UNCAPPED,
+                     velocity_cap_type = PSOVelocityCap.MAXCAP,
                      lower_bounds=-3.0, upper_bounds=3.0,
                      phi_i = 2.0, phi_g = 2.0):
             """
@@ -72,10 +73,12 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 upper_bounds = upper_bounds*np.ones(genome_length, dtype=np.double)
             self._lower_bounds = lb = lower_bounds
             self._upper_bounds = ub = upper_bounds
-            self._speed_cap = (ub-lb)/2 - lb
+            self._speed_cap = (ub-lb)/2
 
-            self._best_position = self._curr_position = np.random.rand(self._genome_length)*(ub-lb)+lb
-            self._velocity = np.random.rand(genome_length)
+            self._curr_position = np.random.rand(self._genome_length)*(ub-lb)+lb
+            self._best_position = dc(self._curr_position)
+            print(self._curr_position)
+            self._velocity = np.random.rand(genome_length)*self._speed_cap*np.random.choice([-1,1])
             self._best_fitness = float('inf')
 
         def evaluate(self):
@@ -85,7 +88,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             current_fitness = self._fitness_function(self._curr_position)
             if current_fitness < self._best_fitness:
                 self._best_fitness = current_fitness
-                self._best_position = self._curr_position
+                self._best_position = dc(self._curr_position)
 
         def update_velocity(self, neighbors):
             """
@@ -109,6 +112,8 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                     elif self._velocity[i] > self._speed_cap[i]:
                         self._velocity[i] = self._speed_cap[i]
 
+            #print(self._curr_position, self._velocity)
+
         def update_velocity_normal(self, neighbors):
             """
             Update the velocity of the particle with the deterministic form of
@@ -125,8 +130,8 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                     best_neighbor = neighbor
                     best_neighbor_fitness = neighbor._best_fitness
 
-            u_i = np.random.normal(0.0, self._phi_i, size=self._genome_length)
-            u_g = np.random.normal(0.0, self._phi_g, size=self._genome_length)
+            u_i = np.random.uniform(0.0, self._phi_i, size=self._genome_length)
+            u_g = np.random.uniform(0.0, self._phi_g, size=self._genome_length)
 
             self._velocity += u_i*(self._best_position-self._curr_position) + u_g*(best_neighbor._best_position-self._curr_position)
 
@@ -161,7 +166,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
     def __init__(self, fitness_function, genome_length, population_size=25,
                  *, phi_i=2.0, phi_g=2.0, lower_bounds=-3.0, upper_bounds=3.0,
-                 topology = PSOTopologies.VONNEUMANN,
+                 topology = PSOTopologies.GBEST,
                  interaction = PSOInteractions.NORMAL,
                  max_generations = float('inf'),
                  max_evaluations = float('inf'),
@@ -231,7 +236,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         A bit hacky, but I'll set the neighborhood to point to the first individual,
         and I'll update the pointer accordingly when evolve is called.
         """
-        self._neighborhoods = [[self._population[0]] for _ in self._population_size]
+        self._neighborhoods = [[self._population[0]] for _ in range(self._population_size)]
 
     def init_topology_lbest(self):
         """
@@ -259,9 +264,6 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         """
         recalculate velocities, move, and evaluate fitness.
         """
-        if self._topology == PSOTopologies.GBEST:
-            self._neighborhoods = [self._elite for _ in range(self._population_size)]
-
         for i in range(len(self._population)):
             individual = self._population[i]
             individual.update_velocity(self._neighborhoods[i])
@@ -272,6 +274,9 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             if individual._best_fitness < self._elite_finess:
                 self._elite = individual
             self._evaluations += 1
+
+        if self._topology == PSOTopologies.GBEST:
+            self._neighborhoods = [[self._elite] for _ in range(self._population_size)]
 
         self._generations += 1
 
@@ -298,13 +303,16 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 or self.get_best_fitness() <= self._goal_fitness)
 
 if __name__ == "__main__":
-    from fitness_functions import decoupled_rosenbrock
-    pso = ParticleSwarmOptimization(fitness_function = decoupled_rosenbrock,
-                                    genome_length = 100,
-                                    population_size = 25,
+    from fitness_functions import FunctionFactory as FF
+    f = FF.get_sphere()
+    pso = ParticleSwarmOptimization(fitness_function = f,
+                                    genome_length = 1,
+                                    population_size = 5,
                                     max_generations = 10,
-                                    interaction = PSOInteractions.FIPS)
+                                    interaction = PSOInteractions.NORMAL)
+
+    me = pso._population[0]
     while not (pso.has_converged()):
         pso.evolve()
-        print(pso.get_best_fitness(1))
-    print(pso.get_best(1))
+        print(me._curr_position, f(me._curr_position), me._best_position)
+    print(pso.get_best(n=5))
