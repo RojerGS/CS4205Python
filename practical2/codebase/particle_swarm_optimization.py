@@ -77,7 +77,6 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
             self._curr_position = np.random.rand(self._genome_length)*(ub-lb)+lb
             self._best_position = dc(self._curr_position)
-            print(self._curr_position)
             self._velocity = np.random.rand(genome_length)*self._speed_cap*np.random.choice([-1,1])
             self._best_fitness = float('inf')
 
@@ -149,6 +148,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             chi = 2/(phi-2+np.sqrt(phi**2-4*phi))
             d_avg = np.mean([np.random.normal(0.0, phi, size=self._genome_length) * (neighbor._best_position-self._curr_position)
                             for neighbor in neighbors])
+            self._velocity = chi*(self._velocity + d_avg)
 
         def move(self):
             """
@@ -280,6 +280,9 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
         self._generations += 1
 
+    def get_curr(self, n=1):
+        return [i._curr_position for i in self._population][:n]
+
     def get_best(self, n=1):
         """
         Return the genotype of the best individual in the population.
@@ -309,10 +312,9 @@ if __name__ == "__main__":
                                     genome_length = 1,
                                     population_size = 5,
                                     max_generations = 10,
-                                    interaction = PSOInteractions.NORMAL)
+                                    interaction = PSOInteractions.FIPS)
 
     me = pso._population[0]
     while not (pso.has_converged()):
         pso.evolve()
-        print(me._curr_position, f(me._curr_position), me._best_position)
     print(pso.get_best(n=5))
