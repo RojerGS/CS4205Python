@@ -9,6 +9,8 @@ import numpy as np
 from copy import deepcopy as dc
 from genome_utils import *
 
+
+
 class GrayBoxOptimizer(object):
     """
     An object which trains a genotype on optimization of a set of
@@ -22,6 +24,7 @@ class GrayBoxOptimizer(object):
         from species which are being trained in a GBO.
         """
         def __init__(self, function, input_space, train_part,
+                     lower_bounds, upper_bounds,
                      genetic_algorithm, genetic_algorithm_arguments,
                      initial_genotype):
             """
@@ -34,6 +37,10 @@ class GrayBoxOptimizer(object):
                 of the genotype are used in the function evaluation.
                 train_part (list): list of indices which are modified
                 by the GA that we're using for optimization.
+                lower_bounds (list): the values at the lower bound of the
+                search space of the GA.
+                upper_bounds (list): the values at the upper bound of the
+                search space of the GA.
                 genetic_algorithm (object): The type of object used to abstract
                 the training of our individuals.
                 genetic_algorithm_arguments (dict): a dictionary listing
@@ -49,11 +56,14 @@ class GrayBoxOptimizer(object):
                                                 genome_length = len(train_part),
                                                 initial_genotype = initial_genotype,
                                                 index_mapping = self._index_mapping,
+                                                lower_bounds = lower_bounds,
+                                                upper_bounds = upper_bounds,
                                                 **genetic_algorithm_arguments)
 
 
     def __init__(self, functions, input_spaces, train_partition,
                  genetic_algorithms, genetic_algorithm_arguments,
+                 lower_bounds, upper_bounds,
                  genome_length = None,
                  max_generations = float('inf'),
                  max_evaluations = float('inf'),
@@ -93,26 +103,38 @@ class GrayBoxOptimizer(object):
         if len(indices) != len(set(indices)):
             raise Exception("The index partitions overlap!")
 
-        """ Initializing subpopulations and member variables """
-        initial_genotype = np.random.rand(genome_length)
+        #
 
+        """ Initializing subpopulations and member variables """
+        self._elite_fitness = float('inf')
+        self._elite_genotype = None
+        self._genome_length = genome_length
+        self._lower_bounds = lower_bounds
+        self._upper_bounds = upper_bounds
+
+        self._generations = 0
+        self._evaluations = 0
+        self._max_generations = max_generations
+        self._max_evaluations = max_evaluations
+        self._goal_fitness = goal_fitness
+
+        initial_genotype = np.random.rand(genome_length)
         self._subpopulations = []
         for i in range(len(train_partition)):
+            lb = np.array(lower_bounds).take(list(train_partition[i]))
+            ub = np.array(upper_bounds).take(list(train_partition[i]))
+
             species = GrayBoxOptimizer.Species(function = functions[i],
                                                input_space = input_spaces[i],
                                                train_part = train_partition[i],
                                                genetic_algorithm = genetic_algorithms[i],
+                                               lower_bounds = lb,
+                                               upper_bounds = ub,
                                                genetic_algorithm_arguments = genetic_algorithm_arguments[i],
                                                initial_genotype = initial_genotype)
             self._subpopulations.append(species)
 
-        self._generations = 0
-        self._elite_fitness = float('inf')
-        self._elite_genotype = None
-        self._genome_length = genome_length
 
-        self._max_generations = max_generations
-        self._goal_fitness = goal_fitness
 
     def get_aggregate_genotype(self):
         """
@@ -124,7 +146,7 @@ class GrayBoxOptimizer(object):
         """
         genotype = [None]*self._genome_length
         for subpopulation in self._subpopulations:
-            elite_genotype = subpopulation._optimizer.get_best_genotype(n=1)
+            elite_genotype = subpopulation._optimizer.get_best_genotypes(n=1)
             train_mapping = subpopulation._index_mapping.get_train_mapping()
             for i in train_mapping:
                 genotype[i] = elite_genotype[train_mapping[i]]
@@ -154,7 +176,7 @@ class GrayBoxOptimizer(object):
         # first, get the aggregated genotype representing the elites of all subpopulations
         genotype = [None]*self._genome_length
         for subpopulation in self._subpopulations:
-            elite_genotype = subpopulation._optimizer.get_best_genotype(n=1)[0]
+            elite_genotype = subpopulation._optimizer.get_best_genotypes(n=1)[0]
             train_mapping = subpopulation._index_mapping.get_train_mapping()
             for i in train_mapping:
                 genotype[i] = elite_genotype[train_mapping[i]]
@@ -167,6 +189,7 @@ class GrayBoxOptimizer(object):
             subpopulation._optimizer.evolve(genotype, subpopulation._index_mapping)
 
         self._generations = sum(map(lambda x: x._optimizer._generations, self._subpopulations))
+        self._evaluations = sum(map(lambda x: x._optimizer._evaluations, self._subpopulations))
 
     def has_converged(self):
         """
@@ -175,6 +198,7 @@ class GrayBoxOptimizer(object):
         """
         if self._elite_genotype == None: return False
         return (self._generations >= self._max_generations\
+                or self._evaluations >= self._max_evaluations\
                 or self.get_elite_fitness() <= self._goal_fitness)
 
     def get_elite_genotype(self):
@@ -191,16 +215,45 @@ class GrayBoxOptimizer(object):
         """
         return self._elite_finess
 
+
+
+class BlackBoxOptimizer(GrayBoxOptimizer):
+    """
+    TODO
+    """
+    pass
+
+
+
 if __name__ == "__main__":
     from fitness_functions import FunctionFactory as FF
+    from particle_swarm_optimization import *
     from particle_swarm_optimization import ParticleSwarmOptimization as PSO
-    f = lambda x: sum((np.array(x)-2)**6)
-    gbo = GrayBoxOptimizer(functions = [f, f, f],
-                           input_spaces = [[0,1,2],[1,2,3],[2,3,4]],
-                           train_partition = [[0,1],[2,3],[4]],
-                           genetic_algorithms = [PSO, PSO, PSO],
-                           genetic_algorithm_arguments = [{}]*3,
-                           max_generations = 1000)
+    from differential_evolution import DifferentialEvolution as DE
+
+    f1 = FF.get_sphere()
+    f2 = FF.get_rosenbrock()
+
+    functions = [f1, f1, f2]
+    input_spaces = [[0,1,2],[1,2,3],[2,3,4]]
+    train_partition = [[0,1],[2,3],[4]]
+    lower_bounds = [-3, -3, -1, -1, -1]
+    upper_bounds = [3, 0, 3, 0, 3]
+
+    genetic_algorithms = [DE, PSO, PSO]
+    genetic_algorithm_arguments = [
+        {'crossover_probability': .25, 'f_weight': .1},
+        {'interaction': PSOInteractions.NORMAL},
+        {'interaction': PSOInteractions.FIPS}
+    ]
+
+    gbo = GrayBoxOptimizer(functions = functions,
+                           input_spaces = input_spaces,
+                           train_partition = train_partition,
+                           lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                           genetic_algorithms = genetic_algorithms,
+                           genetic_algorithm_arguments = genetic_algorithm_arguments,
+                           max_generations = 100)
 
     while not (gbo.has_converged()):
         gbo.evolve()

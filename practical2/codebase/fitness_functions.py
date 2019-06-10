@@ -1,6 +1,8 @@
 import numpy as np
 from math import sin, cos, pi
 
+
+
 class FunctionFactory(object):
     """
     Class to produce functions which will be used for the evaluation of fitness

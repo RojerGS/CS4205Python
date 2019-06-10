@@ -2,18 +2,21 @@
 algorithm, a real-valued evolutionary algorithm.
 This implementation follows Price K.V., Storn R.M., Lampinen J.A. (2005). The Differential Evolution Algorithm. Differential Evolution: A Practical Approach to Global Optimization, 37-134
 In particular, the details in pages 37-50"""
-
 import numpy as np
 import random as rnd
 from math import floor
+from copy import deepcopy as dc
 from genetic_algorithm import GeneticAlgorithm
+
+
 
 class DifferentialEvolution(GeneticAlgorithm):
     """This genetic algorithm encapsulates a population that evolves
     according to the Differential Evolution algorithm."""
-    def __init__(self, fitness_function, genome_length, population_size, *,
-                 lower_bounds=0, upper_bounds=1,
-                 crossover_probability=0.5, f_weight=0.1):
+    def __init__(self, fitness_function, genome_length, *,
+                 population_size = 50, lower_bounds=0, upper_bounds=1,
+                 crossover_probability=0.5, f_weight=0.1,
+                 initial_genotype = None, index_mapping = None):
         """Initialize a population that will evolve according to the DE.
             The genome_length is the number of parameters of each individual,
                 the population_size and fitness_function are self_explanatory;
@@ -27,23 +30,17 @@ class DifferentialEvolution(GeneticAlgorithm):
         super(DifferentialEvolution, self).__init__(
               fitness_function=fitness_function,
               genome_length=genome_length,
-              population_size=population_size)
+              population_size=population_size,
+              lower_bounds = lower_bounds,
+              upper_bounds = upper_bounds)
 
-        # if the given bounds are constants, turn them into vectors
-        if not hasattr(lower_bounds, "__iter__"):
-            lower_bounds = lower_bounds*np.ones(genome_length, dtype=np.double)
-        if not hasattr(upper_bounds, "__iter__"):
-            upper_bounds = upper_bounds*np.ones(genome_length, dtype=np.double)
-        self._lower_bounds = lower_bounds
-        self._upper_bounds = upper_bounds
-
-        self._crossover_prob = crossover_probability
+        self._crossover_probability = crossover_probability
         self._evaluations = 0   # number of times the fitness function was evaluated
         self._generations = 0   # number of generations ran
         self._f_weight = f_weight
-        self.init_population()
+        self.init_population(initial_genotype, index_mapping)
 
-    def init_population(self):
+    def init_population(self, initial_genotype, index_mapping):
         """Initializes the population for the algorithm"""
         # each row is an individual, each column a feature
         self._population = np.random.rand(self._population_size,
@@ -52,12 +49,26 @@ class DifferentialEvolution(GeneticAlgorithm):
         for i, (lb, ub) in enumerate(zip(self._lower_bounds, self._upper_bounds)):
             self._population[:, i] = lb + (ub - lb)*self._population[:, i]
 
-        self._fitnesses = np.zeros(self._population_size, dtype=np.double)
-        for i in range(self._population_size):
-            self._fitnesses[i] = self._fitness_function(self._population[i, :])
+        self._fitnesses = np.array([float('inf')]*self._population_size, dtype=np.double)
+        self.evaluate(initial_genotype, index_mapping)
+
+    def evaluate(self, genotype=None, index_mapping=None):
+        if genotype is None:
+            for i in range(self._population_size):
+                self._fitnesses[i] = self._fitness_function(self._population[i, :])
+        else:
+            im = index_mapping.get_input_mapping()
+            subgenotypes = dc(np.array([dc(genotype)[list(im.keys())] for _ in range(self._population_size)]))
+
+            tm = index_mapping.get_train_mapping()
+            subgenotypes[:, list(tm.values())] = self._population
+
+            for i in range(self._population_size):
+                self._fitnesses[i] = self._fitness_function(subgenotypes[i, :])
+
         self._evaluations += self._population_size
 
-    def evolve(self):
+    def evolve(self, genotype=None, index_mapping=None):
         """Create next generation"""
         self._generations += 1
         Ns = list(range(self._population_size))
@@ -74,7 +85,7 @@ class DifferentialEvolution(GeneticAlgorithm):
             rightMask = self._upper_bounds < mutant
             mutant[rightMask] = self._upper_bounds[rightMask]
             # crossover mask
-            mask = np.random.rand(self._genome_length) <= self._crossover_prob
+            mask = np.random.rand(self._genome_length) <= self._crossover_probability
             # feature that flips for sure
             mask[floor(self._genome_length*rnd.random())] = True
             mutpop[i, mask] = mutant[mask]
@@ -88,6 +99,20 @@ class DifferentialEvolution(GeneticAlgorithm):
 
     def has_converged(self):
         return np.all(self._population[0] == self._population[1:])
+
+    def get_best_genotypes(self, n=1):
+        """
+        get a list of the genotypes of the n best individuals in the population.
+        """
+        indices = np.argsort(self._fitnesses)
+        return np.copy(self._population[indices[:n], :])
+
+    def get_best_fitnesses(self, n=1):
+        """
+        get a list of the n best fitnesses of the population.
+        """
+        return np.sort(self._fitnesses)[:n]
+
 
 
 if __name__ == "__main__":

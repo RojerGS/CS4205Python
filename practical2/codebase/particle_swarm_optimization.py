@@ -5,6 +5,8 @@ from enum import Enum
 from copy import deepcopy as dc
 from genome_utils import *
 
+
+
 class PSOTopologies(Enum):
     """
     Enumerated type which represents the topology strategy.
@@ -32,6 +34,9 @@ class PSOVelocityCap(Enum):
     UNCAPPED = 1    # velocity can increase forever
     MAXCAP = 2      # the magnitude of the velocity on a dimension, at its cap,
                     # is half of the size of the dimension's domain
+
+
+
 
 class ParticleSwarmOptimization(GeneticAlgorithm):
     """
@@ -288,14 +293,14 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
     def get_curr(self, n=1):
         return [i._curr_position for i in self._population][:n]
 
-    def get_best_genotype(self, n=1):
+    def get_best_genotypes(self, n=1):
         """
         Return the genotype of the best individual in the population.
         """
         best_individuals = sorted(self._population, key=lambda x: x._best_fitness)
         return [bi._best_position for bi in best_individuals][:n]
 
-    def get_best_fitness(self, n=1):
+    def get_best_fitnesses(self, n=1):
         """
         Return the best n values of the fitness.
         """
@@ -310,15 +315,18 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 or self._evaluations >= self._max_evaluations
                 or self.get_best_fitness() <= self._goal_fitness)
 
+
+
 if __name__ == "__main__":
     from fitness_functions import FunctionFactory as FF
     f = FF.get_sphere()
     pso = ParticleSwarmOptimization(fitness_function = f,
-                                    genome_length = 1,
+                                    genome_length = 10,
                                     population_size = 10,
                                     max_generations = 10,
                                     interaction = PSOInteractions.FIPS)
 
     while not (pso.has_converged()):
         pso.evolve()
+        print(pso.get_best_fitness())
     print(pso.get_best_genotype(n=5))

@@ -1,5 +1,8 @@
 # import statements
 import numpy as np
+from collections import OrderedDict
+
+
 
 class IndexMapping(object):
     """
@@ -22,15 +25,14 @@ class IndexMapping(object):
         if not (set(train_from).issubset(set(input_from))):
             raise Exception("The train indices are not a subset of the input indices!")
 
-        self._mapping = dict(zip(input_from, input_to))
-        self._train_mapping = dict(zip(train_from, range(len(train_from))))
-        # self._train_mapping = {tf: self._mapping[tf] for tf in train_from}
+        self._input_mapping = OrderedDict(zip(input_from, input_to))
+        self._train_mapping = OrderedDict(zip(train_from, range(len(train_from))))
 
     def get_input_mapping(self):
         """
         Return: The dictionary which maps genotype indicies to subgenotype indices.
         """
-        return self._mapping
+        return self._input_mapping
 
     def get_train_mapping(self):
         """
@@ -39,11 +41,12 @@ class IndexMapping(object):
         """
         return self._train_mapping
 
+
+
 """
 Helper functions which abstract the construction of genotypes from a subspace
 into a more general space.
 """
-
 def extrapolate_values(subgenotype, genotype, index_mapping):
     """
     Returns a vector containing the values of a subgenotype as well as other values
@@ -66,7 +69,6 @@ def extrapolate_values(subgenotype, genotype, index_mapping):
         ret[train_mapping[j]] = subgenotype[train_mapping[j]]
 
     return ret
-
 
 def extract_values(genotype, index_mapping):
     """

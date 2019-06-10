@@ -3,12 +3,14 @@ import numpy as np
 from abc import ABC, abstractmethod
 from genome_utils import *
 
+
+
 class GeneticAlgorithm(ABC):
     """
     Abstract Base Class which defines components necessary
     to the definition of a genetic algorithm
     """
-    def __init__(self, fitness_function, genome_length, population_size,
+    def __init__(self, fitness_function, genome_length, population_size = 50,
                  lower_bounds = -1, upper_bounds = 1,
                  initial_genotype = None, index_mapping = None):
         """
@@ -89,15 +91,15 @@ class GeneticAlgorithm(ABC):
         """
         return self._evaluations
 
-    def get_best_genotype(self, n):
+    @abstractmethod
+    def get_best_genotypes(self, n=1):
         """
-        Return the genotype of the best individual in the population.
+        Return the genotype of the best n individuals in the population.
         """
-        indices = np.argsort(self._fitnesses)
-        return np.copy(self._population[indices[:n], :])
+        pass
 
     def get_best_fitness(self, n=1):
         """
         Return the best n values of the fitness.
         """
-        return np.sort(self._fitnesses)[:n]
+        pass
