@@ -3,6 +3,7 @@ from genetic_algorithm import GeneticAlgorithm
 import numpy as np
 from enum import Enum
 from copy import deepcopy as dc
+from genome_utils import *
 
 class PSOTopologies(Enum):
     """
@@ -43,9 +44,9 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         Inner class and abstraction for the "particle" in PSO
         """
         def __init__(self, genome_length, fitness_function,
+                     lower_bounds, upper_bounds,
                      interaction = PSOInteractions.NORMAL,
                      velocity_cap_type = PSOVelocityCap.MAXCAP,
-                     lower_bounds=-3.0, upper_bounds=3.0,
                      phi_i = 2.0, phi_g = 2.0):
             """
             generate a particle with a random position and velocity
@@ -58,6 +59,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 lower_bounds (float, list-like): the lower bounds for the values in the genotype.
                 upper_bounds (float, list-like): the upper bounds for the values in the genotype.
             """
+
             self._fitness_function = fitness_function
             self._interaction = interaction
             self._genome_length = genome_length
@@ -66,25 +68,27 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             self._phi_i = phi_i
             self._phi_g = phi_g
 
-            # if the given bounds are constants, turn them into vectors
-            if not hasattr(lower_bounds, "__iter__"):
-                lower_bounds = lower_bounds*np.ones(genome_length, dtype=np.double)
-            if not hasattr(upper_bounds, "__iter__"):
-                upper_bounds = upper_bounds*np.ones(genome_length, dtype=np.double)
-            self._lower_bounds = lb = lower_bounds
-            self._upper_bounds = ub = upper_bounds
-            self._speed_cap = (ub-lb)/2
+            self._lower_bounds = lower_bounds
+            self._upper_bounds = upper_bounds
+            self._speed_cap = (self._upper_bounds-self._lower_bounds)/2
 
-            self._curr_position = np.random.rand(self._genome_length)*(ub-lb)+lb
+            self._curr_position = np.random.rand(self._genome_length)*(self._upper_bounds-self._lower_bounds)+self._lower_bounds
             self._best_position = dc(self._curr_position)
             self._velocity = np.random.rand(genome_length)*self._speed_cap*np.random.choice([-1,1])
             self._best_fitness = float('inf')
 
-        def evaluate(self):
+        def evaluate(self, genotype, index_mapping):
             """
-            reevaluate the fitness of the particle
+            reevaluate the fitness of the particle, accounting for additional values
+            that need to be used in evaluation as necessary.
             """
-            current_fitness = self._fitness_function(self._curr_position)
+            if genotype is not None:
+                subgenotype = extrapolate_values(subgenotype = self._curr_position,
+                                                 genotype = genotype, index_mapping = index_mapping)
+            else:
+                subgenotype = self._curr_position
+
+            current_fitness = self._fitness_function(subgenotype)
             if current_fitness < self._best_fitness:
                 self._best_fitness = current_fitness
                 self._best_position = dc(self._curr_position)
@@ -166,6 +170,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
     def __init__(self, fitness_function, genome_length, population_size=25,
                  *, phi_i=2.0, phi_g=2.0, lower_bounds=-3.0, upper_bounds=3.0,
+                 initial_genotype = None, index_mapping = None,
                  topology = PSOTopologies.GBEST,
                  interaction = PSOInteractions.NORMAL,
                  max_generations = float('inf'),
@@ -186,21 +191,21 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         super(ParticleSwarmOptimization, self).__init__(
               fitness_function=fitness_function,
               genome_length=genome_length,
-              population_size=population_size)
+              population_size=population_size,
+              upper_bounds = upper_bounds,
+              lower_bounds = lower_bounds)
 
         self._topology = topology
         self._interaction = interaction
-        self._lower_bounds = lower_bounds
-        self._upper_bounds = upper_bounds
 
         self._max_generations = max_generations
         self._max_evaluations = max_evaluations
         self._goal_fitness = goal_fitness
         self._elite_finess = float('inf')
 
-        self.init_population()
+        self.init_population(initial_genotype, index_mapping)
 
-    def init_population(self):
+    def init_population(self, initial_genotype, index_mapping):
         """
         create the initial group of individuals of the population
         and link them together.
@@ -215,7 +220,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
         # get initial fitnesses for the first evaluation step
         for individual in self._population:
-            individual.evaluate()
+            individual.evaluate(initial_genotype, index_mapping)
 
     def init_topology(self):
         """
@@ -260,7 +265,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 neighborhood.add(self._population[j])
             self._neighborhoods[i] = list(neighborhood)
 
-    def evolve(self):
+    def evolve(self, genotype=None, index_mapping=None):
         """
         recalculate velocities, move, and evaluate fitness.
         """
@@ -270,7 +275,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
         for individual in self._population:
             individual.move()
-            individual.evaluate()
+            individual.evaluate(genotype, index_mapping)
             if individual._best_fitness < self._elite_finess:
                 self._elite = individual
             self._evaluations += 1
@@ -283,7 +288,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
     def get_curr(self, n=1):
         return [i._curr_position for i in self._population][:n]
 
-    def get_best(self, n=1):
+    def get_best_genotype(self, n=1):
         """
         Return the genotype of the best individual in the population.
         """
@@ -310,11 +315,10 @@ if __name__ == "__main__":
     f = FF.get_sphere()
     pso = ParticleSwarmOptimization(fitness_function = f,
                                     genome_length = 1,
-                                    population_size = 5,
+                                    population_size = 10,
                                     max_generations = 10,
                                     interaction = PSOInteractions.FIPS)
 
-    me = pso._population[0]
     while not (pso.has_converged()):
         pso.evolve()
-    print(pso.get_best(n=5))
+    print(pso.get_best_genotype(n=5))
