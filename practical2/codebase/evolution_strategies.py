@@ -21,7 +21,6 @@ class EvolutionStrategies(GeneticAlgorithm):
 
             self._genome_length = genome_length
             self._fitness_function = fitness_function
-            self._has_mutated = True
             self._fitness = None
             self._eps_sigma = eps_sigma
             self._lower_bounds = lower_bounds
@@ -78,11 +77,9 @@ class EvolutionStrategies(GeneticAlgorithm):
             return offspring
 
     def __init__(self, fitness_function, genome_length, population_size=25,
-                 offspring_size = None, lower_bounds=-3.0, upper_bounds=3.0,
-                 initial_genotype = None, index_mapping = None,
-                 max_generations = float('inf'),
-                 max_evaluations = float('inf'),
-                 goal_fitness = float('-inf')):
+                 lower_bounds=-3.0, upper_bounds=3.0, initial_genotype = None, index_mapping = None,
+                 max_generations = float('inf'),  max_evaluations = float('inf'), goal_fitness = float('-inf'),*,
+                 offspring_size = None):
         """
         Args:
             fitness_function (function): The function to minimize.
