@@ -26,13 +26,15 @@ class EvolutionStrategies(GeneticAlgorithm):
             self._lower_bounds = lower_bounds
             self._upper_bounds = upper_bounds
 
+            bound_sizes = [upper_bounds[i] - lower_bounds[i] for i in range(len(upper_bounds))]
+
             if(mean is None):
                 self.mean = np.array([np.random.uniform(lower_bounds[i], upper_bounds[i]) for i in range(genome_length)])
             else:
                 self.mean = mean
 
             if(variance is None):
-                self.variance = np.array([np.random.uniform(0, 1) for i in range(genome_length)])
+                self.variance = np.array([np.random.uniform(0, 0.05*bound_sizes[i]) for i in range(genome_length)])
             else:
                 self.variance = variance
 
@@ -50,8 +52,6 @@ class EvolutionStrategies(GeneticAlgorithm):
 
         def mutate(self):
 
-                self._has_mutated = True
-
                 #Mutate variances
                 z = np.random.normal(0, 1/(2 * self._genome_length))
                 for i in range(self._genome_length):
@@ -61,7 +61,7 @@ class EvolutionStrategies(GeneticAlgorithm):
                 #Mutate mean
                 for i in range(self._genome_length):
                     self.mean[i] += np.random.normal(0, self.variance[i])
-                    self.mean[i] = np.clip(self.mean, self._lower_bounds[i], self._upper_bounds[i])[0]
+                    self.mean[i] = np.clip(self.mean[i], self._lower_bounds[i], self._upper_bounds[i])
 
         def crossover(self, other):
             """
@@ -161,20 +161,23 @@ if __name__ == "__main__":
     from fitness_functions import FunctionFactory as FF
     from matplotlib import pyplot as plt
 
-    #f = FF.get_sphere()
-    f = FF.get_rosenbrock()
+    f = FF.get_sphere()
+    #f = FF.get_rosenbrock()
+    #f = FF.get_soreb()
 
     pop = EvolutionStrategies(fitness_function = f,
-                                genome_length = 5,
-                                population_size = 100)
+                                genome_length = 10,
+                                population_size = 500,
+                                lower_bounds=-10, upper_bounds=10)
 
     fit = []
     for i in range(100):
-        pop.evolve()
         fit.append(pop.get_best_fitness(1)[0])
+        pop.evolve()
 
-    print(pop.get_best_fitness(1)[0])
+    fit.append(pop.get_best_fitness(1)[0])
+
     print(pop.get_best_genotypes(1)[0])
-
+    print(pop.get_best_fitness(1)[0])
     plt.plot(fit)
     plt.show()
