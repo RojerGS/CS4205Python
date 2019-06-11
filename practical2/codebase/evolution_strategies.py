@@ -32,7 +32,7 @@ class EvolutionStrategies(GeneticAlgorithm):
                 self.mean = mean
 
             if(variance is None):
-                self.variance = np.array([1 for i in range(genome_length)])
+                self.variance = np.array([np.random.uniform(0, 1) for i in range(genome_length)])
             else:
                 self.variance = variance
 
@@ -61,7 +61,7 @@ class EvolutionStrategies(GeneticAlgorithm):
                 #Mutate mean
                 for i in range(self._genome_length):
                     self.mean[i] += np.random.normal(0, self.variance[i])
-                    self.mean[i] = np.clip(self.mean, self._lower_bounds[i], self._upper_bounds[i])
+                    self.mean[i] = np.clip(self.mean, self._lower_bounds[i], self._upper_bounds[i])[0]
 
         def crossover(self, other):
             """
@@ -161,12 +161,12 @@ if __name__ == "__main__":
     from fitness_functions import FunctionFactory as FF
     from matplotlib import pyplot as plt
 
-    f = FF.get_sphere()
-    #f = FF.get_rosenbrock()
+    #f = FF.get_sphere()
+    f = FF.get_rosenbrock()
 
     pop = EvolutionStrategies(fitness_function = f,
                                 genome_length = 5,
-                                population_size = 200)
+                                population_size = 100)
 
     fit = []
     for i in range(100):
