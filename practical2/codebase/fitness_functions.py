@@ -19,7 +19,7 @@ class FunctionFactory(object):
         """
         Rosenbrock problem.
         """
-        return lambda x: sum([(100*(x[i+1]-x[i]**2) + (1-x[i])**2) for i in range(len(x)-1)])
+        return lambda x: sum([(100*(x[i+1] - x[i]**2)**2 + (1-x[i])**2) for i in range(len(x)-1)])
 
     def get_rastrigin():
         """
