@@ -118,6 +118,8 @@ class GrayBoxOptimizer(object):
         self._max_generations = max_generations
         self._max_evaluations = max_evaluations
         self._goal_fitness = goal_fitness
+        self._functions = functions
+        self._input_spaces = input_spaces
 
         # initialize each species
         initial_genotype = np.random.rand(genome_length)
@@ -174,6 +176,8 @@ class GrayBoxOptimizer(object):
         subgenotypes = [extract_values(genotype, subpopulation._index_mapping)\
                         for subpopulation in self._subpopulations]
         fitness = 0
+        # (TODO) should traverse the self._functions instead
+        # and apply each subfunction to the right subgenotypes
         for i in range(len(self._subpopulations)):
             fitness += self._subpopulations[i]._function(subgenotypes[i])
 
@@ -185,6 +189,7 @@ class GrayBoxOptimizer(object):
         """
         Evolve each subpopulation for one iteration
         """
+        self._generations += 1
         # first, get the aggregated genotype representing the elites of all subpopulations
         genotype = [None]*self._genome_length
         for subpopulation in self._subpopulations:
@@ -211,6 +216,13 @@ class GrayBoxOptimizer(object):
         return (self._generations >= self._max_generations \
                 or self._evaluations >= self._max_evaluations \
                 or self.get_elite_fitness() <= self._goal_fitness)
+
+    def get_evaluations(self):
+        """
+        Returns:
+            float: number of times the total function F was evaluated
+        """
+        return self._evaluations / len(self._subpopulations)
 
     def get_elite_genotype(self):
         """
@@ -249,6 +261,13 @@ class BlackBoxOptimizer(GrayBoxOptimizer):
                  genetic_algorithms, genetic_algorithm_arguments,
                  lower_bounds, upper_bounds, genome_length,
                  max_generations, max_evaluations, goal_fitness)
+
+    def get_evaluations(self):
+        """
+        Returns:
+            float: number of times the function to be optimized was called
+        """
+        return self._evaluations
 
 
 if __name__ == "__main__":
