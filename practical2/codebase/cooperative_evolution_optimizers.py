@@ -211,8 +211,6 @@ class GrayBoxOptimizer(object):
         """
         return self._elite_finess
 
-
-
 class BlackBoxOptimizer(GrayBoxOptimizer):
     """
     TODO

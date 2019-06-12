@@ -107,7 +107,7 @@ class DifferentialEvolution(GeneticAlgorithm):
         indices = np.argsort(self._fitnesses)
         return np.copy(self._population[indices[:n], :])
 
-    def get_best_fitnesses(self, n=1):
+    def get_best_fitness(self, n=1):
         """
         get a list of the n best fitnesses of the population.
         """
@@ -125,8 +125,8 @@ if __name__ == "__main__":
     print("################")
     print("#### START #####")
     print("################")
-    de = DifferentialEvolution(f, 10, 100, lower_bounds=-3, upper_bounds=3)
+    de = DifferentialEvolution(f, 10, population_size=100, lower_bounds=-3, upper_bounds=3)
     for i in range(100):
         de.evolve()
         print(de.get_best_fitness(1))
-    print(de.get_best(1))
+    print(de.get_best_genotypes(1))

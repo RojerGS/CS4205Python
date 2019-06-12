@@ -1,7 +1,6 @@
 # import statements
 import numpy as np
 from abc import ABC, abstractmethod
-from genome_utils import *
 
 
 
