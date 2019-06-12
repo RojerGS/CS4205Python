@@ -23,6 +23,8 @@ class IndexMapping(object):
         if (len(input_from) != len(input_to)):
             raise Exception("The sizes of the inputs are uneven!")
         if not (set(train_from).issubset(set(input_from))):
+            print(train_from)
+            print(input_from)
             raise Exception("The train indices are not a subset of the input indices!")
 
         self._input_mapping = OrderedDict(zip(input_from, input_to))

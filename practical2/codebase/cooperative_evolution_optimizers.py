@@ -9,6 +9,9 @@ import numpy as np
 from copy import deepcopy as dc
 from genome_utils import *
 
+def sum_functions(f, g):
+    return (lambda x: f(x) + g(x))
+
 class GrayBoxOptimizer(object):
     """
     An object which trains a genotype on optimization of a set of
@@ -87,8 +90,10 @@ class GrayBoxOptimizer(object):
 
         """ Validate arguments """
         # make sure inputs have the same sizes
-        if not (len(input_spaces) == len(functions) == len(train_partition) \
-                == len(genetic_algorithms) == len(genetic_algorithm_arguments)):
+        if not ((len(input_spaces) == len(functions)) and \
+                (len(train_partition) == len(genetic_algorithms) == len(genetic_algorithm_arguments))):
+        # if not (len(input_spaces) == len(functions) == len(train_partition) \
+        #         == len(genetic_algorithms) == len(genetic_algorithm_arguments)):
             raise Exception("The arguments of the Gray Box Optimizer did not have the same sizes!")
 
         # check that the variable partitions don't actually overlap, but they cover everything
@@ -114,14 +119,25 @@ class GrayBoxOptimizer(object):
         self._max_evaluations = max_evaluations
         self._goal_fitness = goal_fitness
 
+        # initialize each species
         initial_genotype = np.random.rand(genome_length)
         self._subpopulations = []
         for i in range(len(train_partition)):
             lb = np.array(lower_bounds).take(list(train_partition[i]))
             ub = np.array(upper_bounds).take(list(train_partition[i]))
 
-            species = GrayBoxOptimizer.Species(function = functions[i],
-                                               input_space = input_spaces[i],
+            # take the input functions and add together all the functions whose
+            # input depends on any of the variables this species optimizes
+            f = lambda x: 0
+            input_space = []
+            for func, inp in zip(functions, input_spaces):
+                if (set(inp) & set(train_partition[i])):
+                    f = sum_functions(f, func)
+                    input_space += inp[::]
+            input_space = list(set(input_space))
+
+            species = GrayBoxOptimizer.Species(function = f,
+                                               input_space = input_space,
                                                train_part = train_partition[i],
                                                genetic_algorithm = genetic_algorithms[i],
                                                lower_bounds = lb,
@@ -213,23 +229,31 @@ class GrayBoxOptimizer(object):
 
 class BlackBoxOptimizer(GrayBoxOptimizer):
     """
-    TODO
+    BlackBoxOptimizer works like the GrayBoxOptimizer but in the setting where
+    we have slightly less information: the fitness function is only one and
+    it depends on all of the variables available
     """
-    pass
-
+    def __init__(self, functions, input_spaces, train_partition,
+                 genetic_algorithms, genetic_algorithm_arguments,
+                 lower_bounds, upper_bounds,
+                 genome_length = None,
+                 max_generations = float('inf'),
+                 max_evaluations = float('inf'),
+                 goal_fitness = float('-inf')):
+        pass
 
 
 if __name__ == "__main__":
     from fitness_functions import FunctionFactory as FF
-    from particle_swarm_optimization import *
+    from particle_swarm_optimization import PSOInteractions
     from particle_swarm_optimization import ParticleSwarmOptimization as PSO
     from differential_evolution import DifferentialEvolution as DE
 
-    # small test with decoupled sphere problems
+    # small test with decoupled, non-aligned sphere problems
     f1 = FF.get_sphere()
-    functions = [f1, f1, f1]
-    input_spaces = [[0,1,2], [3], [4,5,6]]
-    train_partition = [[0,1,2], [3], [4,5,6]]
+    functions = [f1, f1]
+    input_spaces = [[0,1,2,3], [4,5,6]]
+    train_partition = [[0,1,2], [3,4], [5,6]]
     # de-center the bounds to introduce some additional bias
     lower_bounds = [-3]*7
     upper_bounds = [4]*7
