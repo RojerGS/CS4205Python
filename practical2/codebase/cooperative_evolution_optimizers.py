@@ -9,8 +9,6 @@ import numpy as np
 from copy import deepcopy as dc
 from genome_utils import *
 
-
-
 class GrayBoxOptimizer(object):
     """
     An object which trains a genotype on optimization of a set of
@@ -102,8 +100,6 @@ class GrayBoxOptimizer(object):
         # make sure that the indices are a partition
         if len(indices) != len(set(indices)):
             raise Exception("The index partitions overlap!")
-
-        #
 
         """ Initializing subpopulations and member variables """
         self._elite_fitness = float('inf')
@@ -231,22 +227,21 @@ if __name__ == "__main__":
     from particle_swarm_optimization import ParticleSwarmOptimization as PSO
     from differential_evolution import DifferentialEvolution as DE
 
+    # small test with decoupled sphere problems
     f1 = FF.get_sphere()
-    f2 = FF.get_rosenbrock()
-
-    functions = [f1, f1, f2]
-    input_spaces = [[0,1,2],[1,2,3],[2,3,4]]
-    train_partition = [[0,1],[2,3],[4]]
-    lower_bounds = [-3, -3, -1, -1, -1]
-    upper_bounds = [3, 0, 3, 0, 3]
-
+    functions = [f1, f1, f1]
+    input_spaces = [[0,1,2], [3], [4,5,6]]
+    train_partition = [[0,1,2], [3], [4,5,6]]
+    # de-center the bounds to introduce some additional bias
+    lower_bounds = [-3]*7
+    upper_bounds = [4]*7
     genetic_algorithms = [DE, PSO, PSO]
     genetic_algorithm_arguments = [
-        {'crossover_probability': .25, 'f_weight': .1},
+        {'crossover_probability': 0.25, 'f_weight': .1},
         {'interaction': PSOInteractions.NORMAL},
         {'interaction': PSOInteractions.FIPS}
     ]
-
+    
     gbo = GrayBoxOptimizer(functions = functions,
                            input_spaces = input_spaces,
                            train_partition = train_partition,
