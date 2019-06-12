@@ -200,7 +200,6 @@ class GrayBoxOptimizer(object):
         for subpopulation in self._subpopulations:
             subpopulation._optimizer.evolve(genotype, subpopulation._index_mapping)
 
-        self._generations = sum(map(lambda x: x._optimizer._generations, self._subpopulations))
         self._evaluations = sum(map(lambda x: x._optimizer._evaluations, self._subpopulations))
 
     def has_converged(self):
@@ -209,8 +208,8 @@ class GrayBoxOptimizer(object):
             boolean: whether or not our optimizer has converged.
         """
         if self._elite_genotype == None: return False
-        return (self._generations >= self._max_generations\
-                or self._evaluations >= self._max_evaluations\
+        return (self._generations >= self._max_generations \
+                or self._evaluations >= self._max_evaluations \
                 or self.get_elite_fitness() <= self._goal_fitness)
 
     def get_elite_genotype(self):
