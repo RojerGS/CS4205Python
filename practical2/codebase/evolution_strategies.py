@@ -167,7 +167,8 @@ if __name__ == "__main__":
 
     pop = EvolutionStrategies(fitness_function = f,
                                 genome_length = 10,
-                                population_size = 500,
+                                population_size = 100,
+                                offspring_size = 100,
                                 lower_bounds=-10, upper_bounds=10)
 
     fit = []
