@@ -233,14 +233,23 @@ class BlackBoxOptimizer(GrayBoxOptimizer):
     we have slightly less information: the fitness function is only one and
     it depends on all of the variables available
     """
-    def __init__(self, functions, input_spaces, train_partition,
+    def __init__(self, function, train_partition,
                  genetic_algorithms, genetic_algorithm_arguments,
                  lower_bounds, upper_bounds,
                  genome_length = None,
                  max_generations = float('inf'),
                  max_evaluations = float('inf'),
                  goal_fitness = float('-inf')):
-        pass
+
+        functions = [function]
+        input_space = []
+        for l in train_partition:
+            input_space += l
+        input_spaces = [input_space]
+        super(BlackBoxOptimizer, self).__init__(functions, input_spaces, train_partition,
+                 genetic_algorithms, genetic_algorithm_arguments,
+                 lower_bounds, upper_bounds, genome_length,
+                 max_generations, max_evaluations, goal_fitness)
 
 
 if __name__ == "__main__":
@@ -274,5 +283,17 @@ if __name__ == "__main__":
 
     while not (gbo.has_converged()):
         gbo.evolve()
-        print(gbo.get_elite_fitness())
-        print(gbo.get_elite_genotype())
+    print(gbo.get_elite_fitness())
+    print(gbo.get_elite_genotype())
+
+    bbo = BlackBoxOptimizer(function = f1,
+                            train_partition = train_partition,
+                            lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                            genetic_algorithms = genetic_algorithms,
+                            genetic_algorithm_arguments = genetic_algorithm_arguments,
+                            max_generations = 100)
+                        
+    while not (bbo.has_converged()):
+        bbo.evolve()
+    print(bbo.get_elite_fitness())
+    print(bbo.get_elite_genotype())
