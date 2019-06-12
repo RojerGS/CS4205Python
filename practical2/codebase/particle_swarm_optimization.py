@@ -300,7 +300,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         best_individuals = sorted(self._population, key=lambda x: x._best_fitness)
         return [bi._best_position for bi in best_individuals][:n]
 
-    def get_best_fitnesses(self, n=1):
+    def get_best_fitness(self, n=1):
         """
         Return the best n values of the fitness.
         """
@@ -329,4 +329,4 @@ if __name__ == "__main__":
     while not (pso.has_converged()):
         pso.evolve()
         print(pso.get_best_fitness())
-    print(pso.get_best_genotype(n=5))
+    print(pso.get_best_genotypes(n=5))
