@@ -68,6 +68,32 @@ class DifferentialEvolution(GeneticAlgorithm):
 
         self._evaluations += self._population_size
 
+    def evaluate_mutants(self, mutants, genotype=None, index_mapping=None):
+        """
+        Evaluates the fitness of _population_size possible offspring
+        Returns numpy array with corresponding fitnesses
+        """
+        new_fitnesses = np.zeros(self._fitnesses.shape, dtype=np.double)
+        if genotype is None:
+            for i in range(self._population_size):
+                new_fitnesses[i] = self._fitness_function(mutants[i, :])
+        else:
+            # the fitness function expects things of length len(index_mapping.get_input_mapping().keys())
+            im = index_mapping.get_input_mapping()
+            # from the genotype, extract the values we would care about
+            subgenotype = np.array(genotype)[list(im.keys())]
+            # replicate the subgenotype enough times
+            extended_mutants = np.tile(subgenotype, (self._population_size, 1))
+            # find the indices where we want to put the features of the mutants
+            indices = list(index_mapping.get_train_mapping().keys())
+            extended_mutants[:, indices] = mutants
+
+            for i in range(self._population_size):
+                new_fitnesses[i] = self._fitness_function(extended_mutants[i, :])
+
+        self._evaluations += self._population_size
+        return new_fitnesses
+
     def evolve(self, genotype=None, index_mapping=None):
         """Create next generation"""
         self._generations += 1
@@ -89,8 +115,7 @@ class DifferentialEvolution(GeneticAlgorithm):
             # feature that flips for sure
             mask[floor(self._genome_length*rnd.random())] = True
             mutpop[i, mask] = mutant[mask]
-            new_fitnesses[i] = self._fitness_function(mutpop[i, :])
-            self._evaluations += 1
+        new_fitnesses = self.evaluate_mutants(mutpop, genotype=genotype, index_mapping=index_mapping)
         # replace those who were surpassed by their children
         # sbm stands for "the Student Becomes the Master"
         sbm = (new_fitnesses <= self._fitnesses)
