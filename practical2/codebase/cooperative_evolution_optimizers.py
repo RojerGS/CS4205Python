@@ -124,6 +124,9 @@ class GrayBoxOptimizer(object):
         # initialize each species
         initial_genotype = np.random.rand(genome_length)
         self._subpopulations = []
+        # keep track of the "evaluation weight" of each species, which is
+        # (# of subfunctions the species uses)/(# of existing subfunctions)
+        self._evaluation_weights = []
         for i in range(len(train_partition)):
             lb = np.array(lower_bounds).take(list(train_partition[i]))
             ub = np.array(upper_bounds).take(list(train_partition[i]))
@@ -132,11 +135,14 @@ class GrayBoxOptimizer(object):
             # input depends on any of the variables this species optimizes
             f = lambda x: 0
             input_space = []
+            weight = 0
             for func, inp in zip(functions, input_spaces):
                 if (set(inp) & set(train_partition[i])):
+                    weight += 1
                     f = sum_functions(f, func)
                     input_space += inp[::]
             input_space = list(set(input_space))
+            self._evaluation_weights.append(weight/len(functions))
 
             species = GrayBoxOptimizer.Species(function = f,
                                                input_space = input_space,
@@ -205,8 +211,6 @@ class GrayBoxOptimizer(object):
         for subpopulation in self._subpopulations:
             subpopulation._optimizer.evolve(genotype, subpopulation._index_mapping)
 
-        self._evaluations = sum(map(lambda x: x._optimizer._evaluations, self._subpopulations))
-
     def has_converged(self):
         """
         Returns:
@@ -222,7 +226,10 @@ class GrayBoxOptimizer(object):
         Returns:
             float: number of times the total function F was evaluated
         """
-        return self._evaluations / len(self._subpopulations)
+        total = 0
+        for subpop, weight in zip(self._subpopulations, self._evaluation_weights):
+            total += subpop._optimizer._evaluations * weight
+        return total
 
     def get_elite_genotype(self):
         """
@@ -267,7 +274,7 @@ class BlackBoxOptimizer(GrayBoxOptimizer):
         Returns:
             float: number of times the function to be optimized was called
         """
-        return self._evaluations
+        return sum(map(lambda x: x._optimizer._evaluations, self._subpopulations))
 
 
 if __name__ == "__main__":
