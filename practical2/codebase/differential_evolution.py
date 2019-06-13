@@ -99,7 +99,6 @@ class DifferentialEvolution(GeneticAlgorithm):
         self._generations += 1
         Ns = list(range(self._population_size))
         mutpop = np.copy(self._population)
-        new_fitnesses = np.zeros(self._fitnesses.shape, dtype=np.double)
         for i in range(self._population_size):
             # take r0, r1 and r2
             r0, r1, r2 = rnd.sample(Ns[:i]+Ns[i+1:], 3)
