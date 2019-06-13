@@ -282,6 +282,7 @@ if __name__ == "__main__":
     from particle_swarm_optimization import PSOInteractions
     from particle_swarm_optimization import ParticleSwarmOptimization as PSO
     from differential_evolution import DifferentialEvolution as DE
+    from evolution_strategies import EvolutionStrategies as ES
 
     # small test with decoupled, non-aligned sphere problems
     f1 = FF.get_sphere()
@@ -291,10 +292,10 @@ if __name__ == "__main__":
     # de-center the bounds to introduce some additional bias
     lower_bounds = [-3]*7
     upper_bounds = [4]*7
-    genetic_algorithms = [DE, PSO, PSO]
+    genetic_algorithms = [DE, ES, PSO]
     genetic_algorithm_arguments = [
         {'crossover_probability': 0.25, 'f_weight': .1},
-        {'interaction': PSOInteractions.NORMAL},
+        {'population_size':100},
         {'interaction': PSOInteractions.FIPS}
     ]
     
