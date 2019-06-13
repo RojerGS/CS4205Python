@@ -68,7 +68,7 @@ class DifferentialEvolution(GeneticAlgorithm):
 
         self._evaluations += self._population_size
 
-    def evaluate_mutants(self, mutants, genotype=None, index_mapping=None):
+    def _evaluate_mutants(self, mutants, genotype=None, index_mapping=None):
         """
         Evaluates the fitness of _population_size possible offspring
         Returns numpy array with corresponding fitnesses
@@ -115,7 +115,7 @@ class DifferentialEvolution(GeneticAlgorithm):
             # feature that flips for sure
             mask[floor(self._genome_length*rnd.random())] = True
             mutpop[i, mask] = mutant[mask]
-        new_fitnesses = self.evaluate_mutants(mutpop, genotype=genotype, index_mapping=index_mapping)
+        new_fitnesses = self._evaluate_mutants(mutpop, genotype=genotype, index_mapping=index_mapping)
         # replace those who were surpassed by their children
         # sbm stands for "the Student Becomes the Master"
         sbm = (new_fitnesses <= self._fitnesses)
