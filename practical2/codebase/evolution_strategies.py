@@ -41,7 +41,7 @@ class EvolutionStrategies(GeneticAlgorithm):
         that need to be used in evaluation as necessary.
         """
         if genotype is not None:
-            subgenotype = extrapolate_values(subgenotype = self._curr_position,
+            subgenotype = extrapolate_values(subgenotype = mean,
                                              genotype = genotype, index_mapping = index_mapping)
         else:
             subgenotype = mean
