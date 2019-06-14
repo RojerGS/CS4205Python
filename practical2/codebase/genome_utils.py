@@ -23,10 +23,6 @@ class IndexMapping(object):
             print(train_from)
             print(input_from)
             raise Exception("The train indices are not a subset of the input indices!")
-
-        print("-"*30)
-        print("global genotype indices of function input {}".format(input_from))
-        print("global genotype indices of species variables {}".format(train_from))
         ### Input mapping is a dictionary that maps the input global indices into
         ## the locally constructed input
         self._input_mapping = OrderedDict(zip(input_from, range(len(input_from))))
@@ -36,13 +32,6 @@ class IndexMapping(object):
                                 for idx in range(len(train_from))])
         ### Lift mapping lifts the local species subgenotype into the global indices
         self._lift_mapping = OrderedDict([(idx, train_from[idx]) for idx in range(len(train_from))])
-        print("input mapping")
-        print(self._input_mapping)
-        print("train mapping")
-        print(self._train_mapping)
-        print("lift mapping")
-        print(self._lift_mapping)
-        print("-"*30)
 
     def get_input_mapping(self):
         """
@@ -146,7 +135,7 @@ if __name__ == "__main__":
     local_space = [3, 7]
     im = IndexMapping(input_space, local_space)
 
-    local_values = ["a", "b"]
+    local_values = [-99, -999]
     global_values = [10,11,12,13,14,15,16,17,18,19,20]
     ret = extrapolate_values(local_values, global_values, im)
     # this should give [11, "a", 14, "b", 18]
