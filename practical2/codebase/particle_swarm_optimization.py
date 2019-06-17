@@ -120,8 +120,6 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                     elif self._velocity[i] > self._speed_cap[i]:
                         self._velocity[i] = self._speed_cap[i]
 
-            #print(self._curr_position, self._velocity)
-
         def update_velocity_normal(self, neighbors):
             """
             Update the velocity of the particle with the deterministic form of
@@ -155,8 +153,8 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             pass
             phi = self._phi_g + self._phi_i
             chi = 2/(phi-2+np.sqrt(phi**2-4*phi))
-            d_avg = np.mean([np.random.normal(0.0, phi, size=self._genome_length) * (neighbor._best_position-self._curr_position)
-                            for neighbor in neighbors])
+            d_avg = np.mean([np.random.uniform(0.0, phi, size=self._genome_length) * (neighbor._best_position-self._curr_position)
+                            for neighbor in neighbors], axis=0)
             self._velocity = chi*(self._velocity + d_avg)
 
         def move(self):
@@ -176,8 +174,9 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
     def __init__(self, fitness_function, genome_length, population_size=25,
                  *, phi_i=2.0, phi_g=2.0, lower_bounds=-3.0, upper_bounds=3.0,
                  initial_genotype = None, index_mapping = None,
-                 topology = PSOTopologies.GBEST,
-                 interaction = PSOInteractions.NORMAL,
+                 topology = PSOTopologies.VONNEUMANN,
+                 interaction = PSOInteractions.FIPS,
+                 velocity_cap_type = PSOVelocityCap.MAXCAP,
                  max_generations = float('inf'),
                  max_evaluations = float('inf'),
                  goal_fitness = float('-inf')):
@@ -202,6 +201,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
         self._topology = topology
         self._interaction = interaction
+        self._velocity_cap_type = velocity_cap_type
 
         self._max_generations = max_generations
         self._max_evaluations = max_evaluations
@@ -218,9 +218,10 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         self._population = [ParticleSwarmOptimization.Particle(
                             genome_length = self._genome_length,
                             fitness_function = self._fitness_function,
-                            interaction=self._interaction,
+                            interaction=self._interaction, velocity_cap_type=self._velocity_cap_type,
                              lower_bounds=self._lower_bounds, upper_bounds=self._upper_bounds)
                             for _ in range(self._population_size)]
+
         self.init_topology()
 
         # get initial fitnesses for the first evaluation step
@@ -318,13 +319,19 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
 
 if __name__ == "__main__":
+    from random import seed
+    seed(100)
+
     from fitness_functions import FunctionFactory as FF
     f = FF.get_sphere()
+
     pso = ParticleSwarmOptimization(fitness_function = f,
                                     genome_length = 10,
                                     population_size = 10,
-                                    max_generations = 10,
-                                    interaction = PSOInteractions.FIPS)
+                                    max_generations = 100,
+                                    interaction = PSOInteractions.FIPS,
+                                    topology = PSOTopologies.VONNEUMANN,
+                                    velocity_cap_type = PSOVelocityCap.MAXCAP)
 
     while not (pso.has_converged()):
         pso.evolve()
