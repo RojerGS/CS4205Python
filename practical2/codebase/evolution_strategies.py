@@ -40,7 +40,7 @@ class EvolutionStrategies(GeneticAlgorithm):
         reevaluate the fitness of the particle, accounting for additional values
         that need to be used in evaluation as necessary.
         """
-        if genotype is not None:
+        if (genotype is not None) and (index_mapping is not None):
             genotype = extrapolate_values(subgenotype = mean,
                                              genotype = genotype, index_mapping = index_mapping)
         else:

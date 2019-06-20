@@ -64,7 +64,7 @@ class DifferentialEvolution(GeneticAlgorithm):
         Returns numpy array with corresponding fitnesses
         """
         new_fitnesses = np.zeros(self._fitnesses.shape, dtype=np.double)
-        if genotype is None:
+        if genotype is None or index_mapping is None:
             for i in range(self._population_size):
                 new_fitnesses[i] = self._fitness_function(mutants[i, :])
         else:

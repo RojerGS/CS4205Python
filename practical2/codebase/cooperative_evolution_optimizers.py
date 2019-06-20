@@ -49,8 +49,11 @@ class GrayBoxOptimizer(object):
             """
             self._function = function
             self._input_space = input_space
+            ## (TODO) if input_space == train_part, then there is no need for an index mapping
+            # during evaluation, even though we still need this inside the GBO
+            # find a way of speeding up evaluations when the IM is redundant
             self._index_mapping = IndexMapping(input_from = input_space,
-                                              train_from = train_part)
+                                                    train_from = train_part)
 
             self._optimizer = genetic_algorithm(fitness_function = self._function,
                                                 genome_length = len(train_part),
@@ -303,13 +306,6 @@ if __name__ == "__main__":
         {'population_size':100},
         {'interaction': PSOInteractions.FIPS}
     ]
-    ### --------------------------------------------------
-    # genetic_algorithms = [DE, DE, DE]
-    # genetic_algorithm_arguments = [
-    #     {'crossover_probability': 0.25, 'f_weight': .1},
-    #     {'crossover_probability': 0.25, 'f_weight': .1},
-    #     {'crossover_probability': 0.25, 'f_weight': .1}
-    # ]
     
     gbo = GrayBoxOptimizer(functions = functions,
                            input_spaces = input_spaces,
