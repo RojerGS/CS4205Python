@@ -7,7 +7,7 @@ the problem into several populations, each concerned with
 
 import numpy as np
 from copy import deepcopy as dc
-from genome_utils import *
+from genome_utils import IndexMapping, wrap_function, extrapolate_values
 
 def sum_functions(f, g):
     return (lambda x: f(x) + g(x))
@@ -132,12 +132,15 @@ class GrayBoxOptimizer(object):
 
             # take the input functions and add together all the functions whose
             # input depends on any of the variables this species optimizes
+            # wrap all the functions in the corresponding input spaces
             f = lambda x: 0
             input_space = []
             weight = 0
             for func, inp in zip(functions, input_spaces):
+                # check for intersection on the input/subspecies space
                 if (set(inp) & set(train_partition[i])):
                     weight += 1
+                    func = wrap_function(func, inp)
                     f = sum_functions(f, func)
                     input_space += inp[::]
             input_space = list(set(input_space))
@@ -152,25 +155,6 @@ class GrayBoxOptimizer(object):
                                                genetic_algorithm_arguments = genetic_algorithm_arguments[i],
                                                initial_genotype = initial_genotype)
             self._subpopulations.append(species)
-
-
-
-    # def get_aggregate_genotype(self):
-    #     """
-    #     Collect the parts of the genotype from the respective subpopulations
-    #     which are training the respective values.
-
-    #     Returns:
-    #         list-like: the genotype
-    #     """
-    #     genotype = [None]*self._genome_length
-    #     for subpopulation in self._subpopulations:
-    #         elite_genotype = subpopulation._optimizer.get_best_genotypes(n=1)
-    #         train_mapping = subpopulation._index_mapping.get_train_mapping()
-    #         for i in train_mapping:
-    #             genotype[i] = elite_genotype[train_mapping[i]]
-
-    #     return genotype
 
     def evaluate(self, genotype):
         """
@@ -280,74 +264,74 @@ if __name__ == "__main__":
     from differential_evolution import DifferentialEvolution as DE
     from evolution_strategies import EvolutionStrategies as ES
 
-    # verify that if a subpopulation needs to interact with more
-    #   than two subfunctions, then the number of inputs to each
-    #   subfunction is wrong
-    def spheretwo(x):
-        """This sphere function wants specifically 2 inputs"""
-        print(x)
-        return x[0]**2 + x[1]**2
-    functions = [spheretwo]
-    input_spaces = [[0,1,2,3]]
-    train_partition = [[0,1], [2,3]]
-    lower_bounds = [-3]*4
-    upper_bounds = [4]*4
-    genetic_algorithms = [DE, DE]
-    genetic_algorithm_args = [
-        {'crossover_probability': 0.25, 'f_weight': .1, 'population_size': 4}
-    ]*2
-    gbo = GrayBoxOptimizer(functions = functions,
-                           input_spaces = input_spaces,
-                           train_partition = train_partition,
-                           lower_bounds = lower_bounds, upper_bounds = upper_bounds,
-                           genetic_algorithms = genetic_algorithms,
-                           genetic_algorithm_arguments = genetic_algorithm_args,
-                           max_generations = 1)
-    gbo.evolve()
-
-    # # small test with decoupled, non-aligned sphere problems
-    # f1 = FF.get_sphere()
-    # functions = [f1, f1]
-    # input_spaces = [[0,1,2,3], [4,5,6]]
-    # train_partition = [[0,1,2], [3,4], [5,6]]
-    # # de-center the bounds to introduce some additional bias
-    # lower_bounds = [-3]*7
-    # upper_bounds = [4]*7
-    # genetic_algorithms = [DE, ES, PSO]
-    # genetic_algorithm_arguments = [
-    #     {'crossover_probability': 0.25, 'f_weight': .1},
-    #     {'population_size':100},
-    #     {'interaction': PSOInteractions.FIPS}
-    # ]
-    # ### --------------------------------------------------
-    # # genetic_algorithms = [DE, DE, DE]
-    # # genetic_algorithm_arguments = [
-    # #     {'crossover_probability': 0.25, 'f_weight': .1},
-    # #     {'crossover_probability': 0.25, 'f_weight': .1},
-    # #     {'crossover_probability': 0.25, 'f_weight': .1}
-    # # ]
-    
+    # # verify that if a subpopulation needs to interact with more
+    # #   than two subfunctions, then the number of inputs to each
+    # #   subfunction was wrong
+    # def spheretwo(x):
+    #     """This sphere function wants specifically 2 inputs"""
+    #     assert np.array(x).size == 2
+    #     return x[0]**2 + x[1]**2
+    # functions = [spheretwo]*4
+    # input_spaces = [[0,1], [2,3], [4,5], [6,7]]
+    # train_partition = [[0,1,2,3], [4,5,6,7]]
+    # lower_bounds = [-3]*8
+    # upper_bounds = [4]*8
+    # genetic_algorithms = [DE]*2
+    # genetic_algorithm_args = [
+    #     {'crossover_probability': 0.25, 'f_weight': .1, 'population_size': 4}
+    # ]*2
     # gbo = GrayBoxOptimizer(functions = functions,
     #                        input_spaces = input_spaces,
     #                        train_partition = train_partition,
     #                        lower_bounds = lower_bounds, upper_bounds = upper_bounds,
     #                        genetic_algorithms = genetic_algorithms,
-    #                        genetic_algorithm_arguments = genetic_algorithm_arguments,
-    #                        max_generations = 100)
+    #                        genetic_algorithm_arguments = genetic_algorithm_args,
+    #                        max_generations = 1)
+    # gbo.evolve()
 
-    # while not (gbo.has_converged()):
-    #     gbo.evolve()
-    # print(gbo.get_elite_fitness())
-    # print(gbo.get_elite_genotype())
+    # small test with decoupled, non-aligned sphere problems
+    f1 = FF.get_sphere()
+    functions = [f1, f1]
+    input_spaces = [[0,1,2,3], [4,5,6]]
+    train_partition = [[0,1,2], [3,4], [5,6]]
+    # de-center the bounds to introduce some additional bias
+    lower_bounds = [-3]*7
+    upper_bounds = [4]*7
+    genetic_algorithms = [DE, ES, PSO]
+    genetic_algorithm_arguments = [
+        {'crossover_probability': 0.25, 'f_weight': .1},
+        {'population_size':100},
+        {'interaction': PSOInteractions.FIPS}
+    ]
+    ### --------------------------------------------------
+    # genetic_algorithms = [DE, DE, DE]
+    # genetic_algorithm_arguments = [
+    #     {'crossover_probability': 0.25, 'f_weight': .1},
+    #     {'crossover_probability': 0.25, 'f_weight': .1},
+    #     {'crossover_probability': 0.25, 'f_weight': .1}
+    # ]
+    
+    gbo = GrayBoxOptimizer(functions = functions,
+                           input_spaces = input_spaces,
+                           train_partition = train_partition,
+                           lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                           genetic_algorithms = genetic_algorithms,
+                           genetic_algorithm_arguments = genetic_algorithm_arguments,
+                           max_generations = 100)
 
-    # bbo = BlackBoxOptimizer(function = f1,
-    #                         train_partition = train_partition,
-    #                         lower_bounds = lower_bounds, upper_bounds = upper_bounds,
-    #                         genetic_algorithms = genetic_algorithms,
-    #                         genetic_algorithm_arguments = genetic_algorithm_arguments,
-    #                         max_generations = 100)
+    while not (gbo.has_converged()):
+        gbo.evolve()
+    print(gbo.get_elite_fitness())
+    print(gbo.get_elite_genotype())
+
+    bbo = BlackBoxOptimizer(function = f1,
+                            train_partition = train_partition,
+                            lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                            genetic_algorithms = genetic_algorithms,
+                            genetic_algorithm_arguments = genetic_algorithm_arguments,
+                            max_generations = 100)
                         
-    # while not (bbo.has_converged()):
-    #     bbo.evolve()
-    # print(bbo.get_elite_fitness())
-    # print(bbo.get_elite_genotype())
+    while not (bbo.has_converged()):
+        bbo.evolve()
+    print(bbo.get_elite_fitness())
+    print(bbo.get_elite_genotype())

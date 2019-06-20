@@ -53,19 +53,9 @@ class DifferentialEvolution(GeneticAlgorithm):
         self.evaluate(initial_genotype, index_mapping)
 
     def evaluate(self, genotype=None, index_mapping=None):
-        if genotype is None:
-            for i in range(self._population_size):
-                self._fitnesses[i] = self._fitness_function(self._population[i, :])
-        else:
-            im = index_mapping.get_input_mapping()
-            subgenotypes = dc(np.array([dc(genotype)[list(im.keys())] for _ in range(self._population_size)]))
-
-            tm = index_mapping.get_train_mapping()
-            subgenotypes[:, list(tm.values())] = self._population
-
-            for i in range(self._population_size):
-                self._fitnesses[i] = self._fitness_function(subgenotypes[i, :])
-
+        self._fitnesses = self._evaluate_mutants(self._population,
+                                                genotype=genotype,
+                                                index_mapping=index_mapping)
         self._evaluations += self._population_size
 
     def _evaluate_mutants(self, mutants, genotype=None, index_mapping=None):
@@ -78,16 +68,11 @@ class DifferentialEvolution(GeneticAlgorithm):
             for i in range(self._population_size):
                 new_fitnesses[i] = self._fitness_function(mutants[i, :])
         else:
-            # the fitness function expects things of length len(index_mapping.get_input_mapping().keys())
-            im = index_mapping.get_input_mapping()
-            # from the genotype, extract the values we would care about
-            subgenotype = np.array(genotype)[list(im.keys())]
-            # replicate the subgenotype enough times
-            extended_mutants = np.tile(subgenotype, (self._population_size, 1))
+            # replicate the genotype enough times
+            extended_mutants = np.tile(genotype, (self._population_size, 1))
             # find the indices where we want to put the features of the mutants
-            indices = list(index_mapping.get_train_mapping().keys())
-            extended_mutants[:, indices] = mutants
-
+            lift_map = index_mapping.get_lift_mapping()
+            extended_mutants[:, list(lift_map.values())] = mutants
             for i in range(self._population_size):
                 new_fitnesses[i] = self._fitness_function(extended_mutants[i, :])
 
@@ -136,8 +121,6 @@ class DifferentialEvolution(GeneticAlgorithm):
         get a list of the n best fitnesses of the population.
         """
         return np.sort(self._fitnesses)[:n]
-
-
 
 if __name__ == "__main__":
     # Solve the "sphere" problem

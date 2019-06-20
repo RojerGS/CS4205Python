@@ -69,65 +69,21 @@ def extrapolate_values(subgenotype, genotype, index_mapping):
     """
 
     """ Modify the values of subgenotype """
-    ret = np.zeros(len(index_mapping.get_input_mapping()), dtype=np.double)
-
-    input_mapping = index_mapping.get_input_mapping()
-    for i in input_mapping:
-        ret[input_mapping[i]] = genotype[i]
-
-    train_mapping = index_mapping.get_train_mapping()
-    for j in train_mapping:
-        ret[train_mapping[j]] = subgenotype[j]
+    ret = np.array(genotype)
+    lift_mapping = index_mapping.get_lift_mapping()
+    ret[list(lift_mapping.values())] = subgenotype
 
     return ret
 
-# def extract_values(genotype, index_mapping):
-#     """
-#     Collects the values of a genotype into a subgenotype, as described by the index_mapping.
-
-#     Returns:
-#         list-like: the subgenotype
-#     """
-#     input_mapping = index_mapping.get_input_mapping()
-#     subgenotype = [None]*len(input_mapping)
-#     for i in input_mapping:
-#         subgenotype[input_mapping[i]] = genotype[i]
-
-#     return subgenotype
-
-# def aggregate_values(subgenotypes, index_mappings):
-#     """
-#     Takes a list of subgenotypes as well as the indices which each genotype contributes
-#     to the output, and produces a genotype that encompasses all genotypes.
-
-#     Args:
-#         subgenotypes (list-like): a list of subgenotypes to extract values from.
-#         index_partitions (list-like): a list of index mappings which store the
-#         respective subgenotypes' value locations in the genotype.
-
-#     Returns:
-#         numpy array: a complete genotype pulling values from all subgenotypes.
-#     """
-#     """ Validate Input"""
-#     #verify that there is an index_mapping for each subgenotype
-#     if len(subgenotypes) != len(index_mappings):
-#         raise Exception("The inputs aren't of matching sizes!")
-
-#     """ Collect values from the index mappings """
-#     length = len([len(im.get_train_mapping()) for im in index_mappings])
-#     aggregation = [None]*length
-
-#     for (subgenotype, mapping) in zip(subgenotypes, index_mappings):
-#         train_mapping = mapping.get_train_mapping()
-#         for k in train_mapping:
-#             aggregation[train_mapping[k]] = subgenotype[k]
-
-#     """ Return the aggregated genotype """
-#     # first, make sure that the partitions covered the whole genotype
-#     if None in aggregation:
-#         raise Exception("Not the whole genotype was accounted for by the train partitions!")
-
-#     return np.array(aggregation)
+def wrap_function(f, inps):
+    """
+    Returns a function g such that
+    g(L) = f(L[inps])
+        i.e. creates an intermediate function that receives a more general
+        input but then only uses a subset of said input to compute f
+    For indexing matters, assume L is of type np.ndarray
+    """
+    return lambda L: f(L[inps])
 
 if __name__ == "__main__":
     input_space = [1, 3, 4, 7, 8]

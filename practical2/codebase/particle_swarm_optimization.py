@@ -88,12 +88,12 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             that need to be used in evaluation as necessary.
             """
             if genotype is not None:
-                subgenotype = extrapolate_values(subgenotype = self._curr_position,
+                genotype = extrapolate_values(subgenotype = self._curr_position,
                                                  genotype = genotype, index_mapping = index_mapping)
             else:
-                subgenotype = self._curr_position
+                genotype = self._curr_position
 
-            current_fitness = self._fitness_function(subgenotype)
+            current_fitness = self._fitness_function(genotype)
             if current_fitness < self._best_fitness:
                 self._best_fitness = current_fitness
                 self._best_position = dc(self._curr_position)
