@@ -75,7 +75,7 @@ class FunctionFactory(object):
         for i in range(k-1):
             mult_matrix = np.identity(k)
             mult_matrix[i:(i+2), i:(i+2)] = inner_matrix
-            final_matrix *= mult_matrix
+            final_matrix = np.dot(final_matrix, mult_matrix)
 
         ellipsoid = FunctionFactory.get_ellipsoid()
 
