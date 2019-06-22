@@ -251,7 +251,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
 
     def init_topology_lbest(self):
         """
-        define the topology as the gbest topology, in which each particle
+        define the topology as the lbest topology, in which each particle
         looks at adjacently indexed particles, so our topology is one big cycle.
         """
         self._neighborhoods = [[self._population[i-1], self._population[0 if i==self._population_size else i]]

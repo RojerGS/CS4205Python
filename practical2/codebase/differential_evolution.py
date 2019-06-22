@@ -16,6 +16,8 @@ class DifferentialEvolution(GeneticAlgorithm):
     def __init__(self, fitness_function, genome_length, *,
                  population_size = 50, lower_bounds=0, upper_bounds=1,
                  crossover_probability=0.5, f_weight=0.1,
+                 max_generations = float('inf'),
+                 goal_fitness = float('-inf'),
                  initial_genotype = None, index_mapping = None):
         """Initialize a population that will evolve according to the DE.
             The genome_length is the number of parameters of each individual,
@@ -39,6 +41,9 @@ class DifferentialEvolution(GeneticAlgorithm):
         self._generations = 0   # number of generations ran
         self._f_weight = f_weight
         self.init_population(initial_genotype, index_mapping)
+
+        self._max_generations = max_generations
+        self._goal_fitness = goal_fitness
 
     def init_population(self, initial_genotype, index_mapping):
         """Initializes the population for the algorithm"""
@@ -107,7 +112,8 @@ class DifferentialEvolution(GeneticAlgorithm):
         self._fitnesses[sbm] = new_fitnesses[sbm]
 
     def has_converged(self):
-        return np.all(self._population[0] == self._population[1:])
+        return self._generations >= self._max_generations or \
+                self.get_best_fitness()[0] < self._goal_fitness
 
     def get_best_genotypes(self, n=1):
         """
@@ -132,8 +138,12 @@ if __name__ == "__main__":
     print("################")
     print("#### START #####")
     print("################")
-    de = DifferentialEvolution(f, 10, population_size=100, lower_bounds=-3, upper_bounds=3)
-    for i in range(100):
+    de = DifferentialEvolution(f, 10, population_size=200, lower_bounds=-3,
+                                upper_bounds=3, max_generations=100,
+                                goal_fitness=pow(10, -6))
+    i = 0
+    while not de.has_converged():
+        i += 1
         de.evolve()
-        print(de.get_best_fitness(1))
+        print("{:3}: {}".format(i, de.get_best_fitness(1)))
     print(de.get_best_genotypes(1))
