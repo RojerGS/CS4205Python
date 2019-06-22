@@ -271,9 +271,9 @@ if __name__ == "__main__":
     # #   than two subfunctions, then the number of inputs to each
     # #   subfunction was wrong
     # def spheretwo(x):
-    #     """This sphere function wants specifically 2 inputs"""
-    #     assert np.array(x).size == 2
-    #     return x[0]**2 + x[1]**2
+        # """This sphere function wants specifically 2 inputs"""
+        # assert np.array(x).size == 2
+        # return x[0]**2 + x[1]**2
     # functions = [spheretwo]*4
     # input_spaces = [[0,1], [2,3], [4,5], [6,7]]
     # train_partition = [[0,1,2,3], [4,5,6,7]]
@@ -281,17 +281,17 @@ if __name__ == "__main__":
     # upper_bounds = [4]*8
     # genetic_algorithms = [DE]*2
     # genetic_algorithm_args = [
-    #     {'crossover_probability': 0.25, 'f_weight': .1, 'population_size': 4}
+        # {'crossover_probability': 0.25, 'f_weight': .1, 'population_size': 4}
     # ]*2
     # gbo = GrayBoxOptimizer(functions = functions,
-    #                        input_spaces = input_spaces,
-    #                        train_partition = train_partition,
-    #                        lower_bounds = lower_bounds, upper_bounds = upper_bounds,
-    #                        genetic_algorithms = genetic_algorithms,
-    #                        genetic_algorithm_arguments = genetic_algorithm_args,
-    #                        max_generations = 1)
+                           # input_spaces = input_spaces,
+                           # train_partition = train_partition,
+                           # lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                           # genetic_algorithms = genetic_algorithms,
+                           # genetic_algorithm_arguments = genetic_algorithm_args,
+                           # max_generations = 1)
     # gbo.evolve()
-
+    
     # small test with decoupled, non-aligned sphere problems
     f1 = FF.get_sphere()
     functions = [f1, f1]

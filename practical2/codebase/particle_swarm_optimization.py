@@ -327,7 +327,7 @@ if __name__ == "__main__":
 
     pso = ParticleSwarmOptimization(fitness_function = f,
                                     genome_length = 10,
-                                    population_size = 10,
+                                    population_size = 100,
                                     max_generations = 100,
                                     interaction = PSOInteractions.FIPS,
                                     topology = PSOTopologies.VONNEUMANN,
@@ -336,4 +336,4 @@ if __name__ == "__main__":
     while not (pso.has_converged()):
         pso.evolve()
         print(pso.get_best_fitness())
-    print(pso.get_best_genotypes(n=5))
+    print(pso.get_best_genotypes(n=1))
