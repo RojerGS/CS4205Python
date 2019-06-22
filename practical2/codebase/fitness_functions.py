@@ -9,18 +9,25 @@ class FunctionFactory(object):
     in our evolutionary algorithms. The functions are outlined in
     "Exploiting Linkage Information...".
     """
+    @staticmethod
+    def sphere(x):
+        return sum(np.array(x)**2)
+
+    @staticmethod
     def get_sphere():
         """
         Sphere problem.
         """
-        return lambda x: sum(np.array(x)**2)
+        return FunctionFactory.sphere
 
+    @staticmethod
     def get_rosenbrock():
         """
         Rosenbrock problem.
         """
         return lambda x: sum([(100*(x[i+1] - x[i]**2)**2 + (1-x[i])**2) for i in range(len(x)-1)])
 
+    @staticmethod
     def get_rastrigin():
         """
         Rastrigin problem.

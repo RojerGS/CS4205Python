@@ -7,7 +7,7 @@ the problem into several populations, each concerned with
 
 import numpy as np
 from copy import deepcopy as dc
-from genome_utils import *
+from genome_utils import IndexMapping, wrap_function, extrapolate_values
 
 def sum_functions(f, g):
     return (lambda x: f(x) + g(x))
@@ -49,9 +49,11 @@ class GrayBoxOptimizer(object):
             """
             self._function = function
             self._input_space = input_space
+            ## (TODO) if input_space == train_part, then there is no need for an index mapping
+            # during evaluation, even though we still need this inside the GBO
+            # find a way of speeding up evaluations when the IM is redundant
             self._index_mapping = IndexMapping(input_from = input_space,
-                                              train_from = train_part,
-                                              input_to = list(range(len(input_space))))
+                                                    train_from = train_part)
 
             self._optimizer = genetic_algorithm(fitness_function = self._function,
                                                 genome_length = len(train_part),
@@ -118,8 +120,8 @@ class GrayBoxOptimizer(object):
         self._max_generations = max_generations
         self._max_evaluations = max_evaluations
         self._goal_fitness = goal_fitness
-        self._functions = functions
-        self._input_spaces = input_spaces
+        self._functions = functions[::]
+        self._input_spaces = dc(input_spaces)
 
         # initialize each species
         initial_genotype = np.random.rand(genome_length)
@@ -133,12 +135,15 @@ class GrayBoxOptimizer(object):
 
             # take the input functions and add together all the functions whose
             # input depends on any of the variables this species optimizes
+            # wrap all the functions in the corresponding input spaces
             f = lambda x: 0
             input_space = []
             weight = 0
             for func, inp in zip(functions, input_spaces):
+                # check for intersection on the input/subspecies space
                 if (set(inp) & set(train_partition[i])):
                     weight += 1
+                    func = wrap_function(func, inp)
                     f = sum_functions(f, func)
                     input_space += inp[::]
             input_space = list(set(input_space))
@@ -154,38 +159,16 @@ class GrayBoxOptimizer(object):
                                                initial_genotype = initial_genotype)
             self._subpopulations.append(species)
 
-
-
-    def get_aggregate_genotype(self):
-        """
-        Collect the parts of the genotype from the respective subpopulations
-        which are training the respective values.
-
-        Returns:
-            list-like: the genotype
-        """
-        genotype = [None]*self._genome_length
-        for subpopulation in self._subpopulations:
-            elite_genotype = subpopulation._optimizer.get_best_genotypes(n=1)
-            train_mapping = subpopulation._index_mapping.get_train_mapping()
-            for i in train_mapping:
-                genotype[i] = elite_genotype[train_mapping[i]]
-
-        return genotype
-
     def evaluate(self, genotype):
         """
         Evaluate the fitness of an individual as the summation of the evaluations
         of all functions being optimized in this optimizer. Updates the elite and
         elite fitness accordingly.
         """
-        subgenotypes = [extract_values(genotype, subpopulation._index_mapping)\
-                        for subpopulation in self._subpopulations]
         fitness = 0
-        # (TODO) should traverse the self._functions instead
-        # and apply each subfunction to the right subgenotypes
-        for i in range(len(self._subpopulations)):
-            fitness += self._subpopulations[i]._function(subgenotypes[i])
+        for func, input_space in zip(self._functions, self._input_spaces):
+            inp = [genotype[idx] for idx in input_space]
+            fitness += func(inp)
 
         if fitness < self._elite_fitness:
             self._elite_finess = fitness
@@ -200,9 +183,9 @@ class GrayBoxOptimizer(object):
         genotype = [None]*self._genome_length
         for subpopulation in self._subpopulations:
             elite_genotype = subpopulation._optimizer.get_best_genotypes(n=1)[0]
-            train_mapping = subpopulation._index_mapping.get_train_mapping()
-            for i in train_mapping:
-                genotype[i] = elite_genotype[train_mapping[i]]
+            lift_mapping = subpopulation._index_mapping.get_lift_mapping()
+            for i in lift_mapping:
+                genotype[lift_mapping[i]] = elite_genotype[i]
 
         # evaluate current state of our genotype
         self.evaluate(genotype)
@@ -284,6 +267,31 @@ if __name__ == "__main__":
     from differential_evolution import DifferentialEvolution as DE
     from evolution_strategies import EvolutionStrategies as ES
 
+    # # verify that if a subpopulation needs to interact with more
+    # #   than two subfunctions, then the number of inputs to each
+    # #   subfunction was wrong
+    # def spheretwo(x):
+        # """This sphere function wants specifically 2 inputs"""
+        # assert np.array(x).size == 2
+        # return x[0]**2 + x[1]**2
+    # functions = [spheretwo]*4
+    # input_spaces = [[0,1], [2,3], [4,5], [6,7]]
+    # train_partition = [[0,1,2,3], [4,5,6,7]]
+    # lower_bounds = [-3]*8
+    # upper_bounds = [4]*8
+    # genetic_algorithms = [DE]*2
+    # genetic_algorithm_args = [
+        # {'crossover_probability': 0.25, 'f_weight': .1, 'population_size': 4}
+    # ]*2
+    # gbo = GrayBoxOptimizer(functions = functions,
+                           # input_spaces = input_spaces,
+                           # train_partition = train_partition,
+                           # lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                           # genetic_algorithms = genetic_algorithms,
+                           # genetic_algorithm_arguments = genetic_algorithm_args,
+                           # max_generations = 1)
+    # gbo.evolve()
+    
     # small test with decoupled, non-aligned sphere problems
     f1 = FF.get_sphere()
     functions = [f1, f1]

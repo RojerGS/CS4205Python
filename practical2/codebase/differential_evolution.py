@@ -16,6 +16,8 @@ class DifferentialEvolution(GeneticAlgorithm):
     def __init__(self, fitness_function, genome_length, *,
                  population_size = 50, lower_bounds=0, upper_bounds=1,
                  crossover_probability=0.5, f_weight=0.1,
+                 max_generations = float('inf'),
+                 goal_fitness = float('-inf'),
                  initial_genotype = None, index_mapping = None):
         """Initialize a population that will evolve according to the DE.
             The genome_length is the number of parameters of each individual,
@@ -40,6 +42,9 @@ class DifferentialEvolution(GeneticAlgorithm):
         self._f_weight = f_weight
         self.init_population(initial_genotype, index_mapping)
 
+        self._max_generations = max_generations
+        self._goal_fitness = goal_fitness
+
     def init_population(self, initial_genotype, index_mapping):
         """Initializes the population for the algorithm"""
         # each row is an individual, each column a feature
@@ -53,19 +58,9 @@ class DifferentialEvolution(GeneticAlgorithm):
         self.evaluate(initial_genotype, index_mapping)
 
     def evaluate(self, genotype=None, index_mapping=None):
-        if genotype is None:
-            for i in range(self._population_size):
-                self._fitnesses[i] = self._fitness_function(self._population[i, :])
-        else:
-            im = index_mapping.get_input_mapping()
-            subgenotypes = dc(np.array([dc(genotype)[list(im.keys())] for _ in range(self._population_size)]))
-
-            tm = index_mapping.get_train_mapping()
-            subgenotypes[:, list(tm.values())] = self._population
-
-            for i in range(self._population_size):
-                self._fitnesses[i] = self._fitness_function(subgenotypes[i, :])
-
+        self._fitnesses = self._evaluate_mutants(self._population,
+                                                genotype=genotype,
+                                                index_mapping=index_mapping)
         self._evaluations += self._population_size
 
     def _evaluate_mutants(self, mutants, genotype=None, index_mapping=None):
@@ -74,20 +69,15 @@ class DifferentialEvolution(GeneticAlgorithm):
         Returns numpy array with corresponding fitnesses
         """
         new_fitnesses = np.zeros(self._fitnesses.shape, dtype=np.double)
-        if genotype is None:
+        if genotype is None or index_mapping is None:
             for i in range(self._population_size):
                 new_fitnesses[i] = self._fitness_function(mutants[i, :])
         else:
-            # the fitness function expects things of length len(index_mapping.get_input_mapping().keys())
-            im = index_mapping.get_input_mapping()
-            # from the genotype, extract the values we would care about
-            subgenotype = np.array(genotype)[list(im.keys())]
-            # replicate the subgenotype enough times
-            extended_mutants = np.tile(subgenotype, (self._population_size, 1))
+            # replicate the genotype enough times
+            extended_mutants = np.tile(genotype, (self._population_size, 1))
             # find the indices where we want to put the features of the mutants
-            indices = list(index_mapping.get_train_mapping().keys())
-            extended_mutants[:, indices] = mutants
-
+            lift_map = index_mapping.get_lift_mapping()
+            extended_mutants[:, list(lift_map.values())] = mutants
             for i in range(self._population_size):
                 new_fitnesses[i] = self._fitness_function(extended_mutants[i, :])
 
@@ -122,7 +112,8 @@ class DifferentialEvolution(GeneticAlgorithm):
         self._fitnesses[sbm] = new_fitnesses[sbm]
 
     def has_converged(self):
-        return np.all(self._population[0] == self._population[1:])
+        return self._generations >= self._max_generations or \
+                self.get_best_fitness()[0] < self._goal_fitness
 
     def get_best_genotypes(self, n=1):
         """
@@ -137,8 +128,6 @@ class DifferentialEvolution(GeneticAlgorithm):
         """
         return np.sort(self._fitnesses)[:n]
 
-
-
 if __name__ == "__main__":
     # Solve the "sphere" problem
     from fitness_functions import FunctionFactory as FF
@@ -149,8 +138,12 @@ if __name__ == "__main__":
     print("################")
     print("#### START #####")
     print("################")
-    de = DifferentialEvolution(f, 10, population_size=100, lower_bounds=-3, upper_bounds=3)
-    for i in range(100):
+    de = DifferentialEvolution(f, 10, population_size=200, lower_bounds=-3,
+                                upper_bounds=3, max_generations=100,
+                                goal_fitness=pow(10, -6))
+    i = 0
+    while not de.has_converged():
+        i += 1
         de.evolve()
-        print(de.get_best_fitness(1))
+        print("{:3}: {}".format(i, de.get_best_fitness(1)))
     print(de.get_best_genotypes(1))
