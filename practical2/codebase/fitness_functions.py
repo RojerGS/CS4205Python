@@ -15,7 +15,7 @@ class FunctionFactory(object):
         """
         Sphere function
         """
-        return FunctionFactory.sphere
+        return lambda x: sum(np.array(x)**2)
 
     @staticmethod
     def get_rosenbrock():
