@@ -77,8 +77,6 @@ class FunctionFactory(object):
             mult_matrix[i:(i+2), i:(i+2)] = inner_matrix
             final_matrix *= mult_matrix
 
-        print(final_matrix)
-
         ellipsoid = FunctionFactory.get_ellipsoid()
 
         def soreb(x):
