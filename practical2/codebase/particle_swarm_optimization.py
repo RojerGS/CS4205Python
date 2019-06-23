@@ -304,7 +304,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         best_individuals = sorted(self._population, key=lambda x: x._best_fitness)
         return [bi._best_position for bi in best_individuals][:n]
 
-    def get_best_fitnesses(self, n=1):
+    def get_best_fitness(self, n=1):
         """
         Return the best n values of the fitness.
         """
@@ -317,7 +317,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         """
         return (self._generations >= self._max_generations
                 or self._evaluations >= self._max_evaluations
-                or self.get_best_fitnesses()[0] <= self._goal_fitness)
+                or self.get_best_fitness()[0] <= self._goal_fitness)
 
 
 
@@ -330,7 +330,7 @@ if __name__ == "__main__":
 
     pso = ParticleSwarmOptimization(fitness_function = f,
                                     genome_length = 10,
-                                    population_size = 50,
+                                    population_size = 100,
                                     max_generations = 100,
                                     interaction = PSOInteractions.FIPS,
                                     topology = PSOTopologies.VONNEUMANN,
@@ -338,5 +338,5 @@ if __name__ == "__main__":
 
     while not (pso.has_converged()):
         pso.evolve()
-        print(pso.get_best_fitnesses())
+        print(pso.get_best_fitness())
     print(pso.get_best_genotypes(n=1))
