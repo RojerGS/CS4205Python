@@ -135,7 +135,7 @@ class EvolutionStrategies(GeneticAlgorithm):
         """
         return (self._generations >= self._max_generations
                 or self._evaluations >= self._max_evaluations
-                or self.get_best_fitness() <= self._goal_fitness)
+                or self.get_best_fitness(1)[0] <= self._goal_fitness)
 
     def get_best_genotypes(self, n=1):
         """

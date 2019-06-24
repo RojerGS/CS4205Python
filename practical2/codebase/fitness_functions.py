@@ -9,46 +9,63 @@ class FunctionFactory(object):
     in our evolutionary algorithms. The functions are outlined in
     "Exploiting Linkage Information...".
     """
-    @staticmethod
-    def sphere(x):
-        return sum(np.array(x)**2)
 
     @staticmethod
     def get_sphere():
         """
-        Sphere problem.
+        Sphere function
         """
-        return FunctionFactory.sphere
+        return lambda x: sum(np.array(x)**2)
 
     @staticmethod
     def get_rosenbrock():
         """
-        Rosenbrock problem.
+        Rosenbrock function
         """
         return lambda x: sum([(100*(x[i+1] - x[i]**2)**2 + (1-x[i])**2) for i in range(len(x)-1)])
 
     @staticmethod
     def get_rastrigin():
         """
-        Rastrigin problem.
+        Rastrigin function
         """
         return lambda x: (10*len(x) + sum([xi**2 - 10*cos(2*pi*xi) for xi in x]))
 
+    @staticmethod
     def get_michalewicz():
         """
-        Michalewicz problem.
+        Michalewicz function
         """
         return lambda x: sum([-sin(x[i]) * (sin((i+1)*x[i]**2/pi)**20) for i in range(len(x))])
 
+    @staticmethod
     def get_ellipsoid():
         """
-        Ellipsoid problem.
+        Ellipsoid function
         """
         return lambda x: sum([10**((6*i)/(len(x)-1)) * (x[i]**2) for i in range(len(x))])
 
+    @staticmethod
+    def get_rotated_ellipsoid(theta = 45.0):
+        """
+        Rotated ellipsoid function
+        """
+        theta_rad = np.radians(theta)
+        rotation_matrix = np.array(
+            [[np.cos(theta_rad), -np.sin(theta_rad)],
+            [np.sin(theta_rad), np.cos(theta_rad)]]
+        )
+        def rotated_ellipsoid(x):
+            for i in range(len(x)-1):
+                x[i:i+2] = np.dot(rotation_matrix, x[i:i+2])
+            return sum([10**((6*i)/(len(x)-1)) * (x[i]**2) for i in range(len(x))])
+
+        return rotated_ellipsoid
+
+    @staticmethod
     def get_soreb(k=5, theta=45.0):
         """
-        SoREB problem.
+        SoREB function
         """
         t = theta_rad = np.radians(theta)
         c = np.cos; s = np.sin;
@@ -58,9 +75,7 @@ class FunctionFactory(object):
         for i in range(k-1):
             mult_matrix = np.identity(k)
             mult_matrix[i:(i+2), i:(i+2)] = inner_matrix
-            final_matrix *= mult_matrix
-
-        print(final_matrix)
+            final_matrix = np.dot(final_matrix, mult_matrix)
 
         ellipsoid = FunctionFactory.get_ellipsoid()
 

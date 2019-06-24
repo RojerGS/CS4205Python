@@ -52,7 +52,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                      lower_bounds, upper_bounds,
                      interaction = PSOInteractions.NORMAL,
                      velocity_cap_type = PSOVelocityCap.MAXCAP,
-                     phi_i = 2.0, phi_g = 2.0):
+                     phi_i = 2.05, phi_g = 2.05):
             """
             generate a particle with a random position and velocity
 
@@ -139,7 +139,10 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
             u_i = np.random.uniform(0.0, self._phi_i, size=self._genome_length)
             u_g = np.random.uniform(0.0, self._phi_g, size=self._genome_length)
 
-            self._velocity += u_i*(self._best_position-self._curr_position) + u_g*(best_neighbor._best_position-self._curr_position)
+            phi = self._phi_i + self._phi_g
+            chi = 2 / (phi - 2 + np.sqrt(phi**2 - 4*phi))
+
+            self._velocity = chi*(self._velocity + u_i*(self._best_position-self._curr_position) + u_g*(best_neighbor._best_position-self._curr_position))
 
         def update_velocity_FIPS(self, neighbors):
             """
@@ -150,9 +153,9 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
                 neighbors (list-like): a list of neighbors which will influence
                 the movement of the particle.
             """
-            pass
             phi = self._phi_g + self._phi_i
             chi = 2/(phi-2+np.sqrt(phi**2-4*phi))
+
             d_avg = np.mean([np.random.uniform(0.0, phi, size=self._genome_length) * (neighbor._best_position-self._curr_position)
                             for neighbor in neighbors], axis=0)
             self._velocity = chi*(self._velocity + d_avg)
@@ -314,7 +317,7 @@ class ParticleSwarmOptimization(GeneticAlgorithm):
         """
         return (self._generations >= self._max_generations
                 or self._evaluations >= self._max_evaluations
-                or self.get_best_fitness() <= self._goal_fitness)
+                or self.get_best_fitness()[0] <= self._goal_fitness)
 
 
 
