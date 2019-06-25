@@ -90,6 +90,10 @@ class GeneticAlgorithm(ABC):
         """
         return self._evaluations
 
+    def get_evaluations(self):
+        '''For convenience, same name as GBO'''
+        return self.evaluations()
+
     @abstractmethod
     def get_best_genotypes(self, n=1):
         """
@@ -102,3 +106,6 @@ class GeneticAlgorithm(ABC):
         Return the best n values of the fitness.
         """
         pass
+
+    def get_elite_fitness(self):
+        return self.get_best_fitness(1)[0]
