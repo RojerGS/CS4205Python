@@ -4,3 +4,6 @@ practical1_java
 *.pdf
 practical1/experiments
 *__pycache__
+*.png
+*.jpg
+*.jpeg
