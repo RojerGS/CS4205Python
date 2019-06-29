@@ -8,6 +8,7 @@ the problem into several populations, each concerned with
 import numpy as np
 from copy import deepcopy as dc
 from genome_utils import IndexMapping, wrap_function, extrapolate_values
+from random import shuffle
 
 def sum_functions(f, g):
     return (lambda x: f(x) + g(x))
@@ -228,6 +229,36 @@ class GrayBoxOptimizer(object):
         """
         return self._elite_finess
 
+class RandomGrayBoxOptimizer(GrayBoxOptimizer):
+    """Variant of the GrayBoxOptimizer that evolves
+        its species in a random order each generation"""
+    def __init__(self, *args, **kwargs):
+        super(RandomGrayBoxOptimizer, self).__init__(*args, **kwargs)
+    
+    def evolve(self):
+        """
+        Evolve each subpopulation for one iteration
+        """
+        self._generations += 1
+        # first, get the aggregated genotype representing the elites of all subpopulations
+        genotype = [None]*self._genome_length
+        for subpopulation in self._subpopulations:
+            elite_genotype = subpopulation._optimizer.get_best_genotypes(n=1)[0]
+            lift_mapping = subpopulation._index_mapping.get_lift_mapping()
+            for i in lift_mapping:
+                genotype[lift_mapping[i]] = elite_genotype[i]
+
+        # evaluate current state of our genotype
+        self.evaluate(genotype)
+
+        # traverse the species in a random order
+        indices = list(range(len(self._subpopulations)))
+        shuffle(indices)
+        # now project all subgenotypes onto the current optimal genotype where applicable
+        for idx in indices:
+            subpopulation = self._subpopulations[idx]
+            subpopulation._optimizer.evolve(genotype, subpopulation._index_mapping)
+
 class BlackBoxOptimizer(GrayBoxOptimizer):
     """
     BlackBoxOptimizer works like the GrayBoxOptimizer but in the setting where
@@ -314,11 +345,22 @@ if __name__ == "__main__":
                            genetic_algorithms = genetic_algorithms,
                            genetic_algorithm_arguments = genetic_algorithm_arguments,
                            max_generations = 100)
-
     while not (gbo.has_converged()):
         gbo.evolve()
     print(gbo.get_elite_fitness())
     print(gbo.get_elite_genotype())
+
+    rgbo = RandomGrayBoxOptimizer(functions = functions,
+                           input_spaces = input_spaces,
+                           train_partition = train_partition,
+                           lower_bounds = lower_bounds, upper_bounds = upper_bounds,
+                           genetic_algorithms = genetic_algorithms,
+                           genetic_algorithm_arguments = genetic_algorithm_arguments,
+                           max_generations = 100)
+    while not (rgbo.has_converged()):
+        rgbo.evolve()
+    print(rgbo.get_elite_fitness())
+    print(rgbo.get_elite_genotype())
 
     bbo = BlackBoxOptimizer(function = f1,
                             train_partition = train_partition,
